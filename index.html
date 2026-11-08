@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="et">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matemaatika mängud · 4. klass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#24166a;--bg2:#4b1f93;--ink:#170d33;--muted:#cbbff7;--gold:#ffd23f}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:'Fredoka',system-ui,sans-serif;color:#fff;min-height:100vh;
+  background:
+    radial-gradient(circle at 15% -5%, #7a3cf0 0%, transparent 45%),
+    radial-gradient(circle at 110% 90%, #e2408f55 0%, transparent 40%),
+    linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+}
+.wrap{max-width:720px;margin:0 auto;padding:28px 16px 40px}
+.blocks{display:flex;justify-content:center;gap:5px}
+.blk{width:20px;height:20px;border-radius:5px;background:var(--c);
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.5), 0 0 0 1.5px rgba(0,0,0,.35)}
+.blk:nth-child(odd){transform:translateY(-5px)}
+h1{margin:10px 0 4px;text-align:center;font-size:42px;line-height:1.05;color:var(--gold);
+  -webkit-text-stroke:2px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink)}
+.sub{text-align:center;color:var(--muted);margin:0 0 26px;font-size:18px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;list-style:none;margin:0;padding:0}
+.card{
+  display:flex;flex-direction:column;gap:6px;height:100%;padding:16px;border-radius:20px;text-decoration:none;color:var(--ink);
+  background:#fff;border:3px solid var(--ink);box-shadow:0 6px 0 var(--ink);transition:transform .08s, box-shadow .08s;
+}
+a.card:hover{transform:translateY(-3px);box-shadow:0 9px 0 var(--ink)}
+a.card:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.icon{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:30px;font-weight:700;color:#fff;
+  background:var(--c);border:3px solid var(--ink);box-shadow:inset 0 -5px 0 rgba(0,0,0,.25), inset 0 4px 0 rgba(255,255,255,.4)}
+.card h2{margin:6px 0 0;font-size:22px}
+.card p{margin:0;font-size:15px;color:#4a3f6b;line-height:1.35}
+.tag{align-self:flex-start;margin-top:auto;font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:#ece6ff;color:#4b1f93}
+.card.soon{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(0,0,0,.35);box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.card.soon p{color:var(--muted)}
+.card.soon .icon{filter:grayscale(.6);opacity:.7}
+.card.soon .tag{background:rgba(255,255,255,.15);color:#fff}
+footer{text-align:center;color:var(--muted);margin-top:32px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="blocks" aria-hidden="true">
+    <div class="blk" style="--c:#ff5a6e"></div><div class="blk" style="--c:#ffb020"></div>
+    <div class="blk" style="--c:#ffd23f"></div><div class="blk" style="--c:#3ddc84"></div>
+    <div class="blk" style="--c:#2ec4ff"></div><div class="blk" style="--c:#8b5cff"></div>
+  </div>
+  <h1>Matemaatika mängud</h1>
+  <p class="sub">Harjutused 4. klassile · vali mäng ja hakka pihta!</p>
+
+  <ul class="list">
+    <li>
+      <a class="card" href="ylesanded/korrutusplokid.html">
+        <div class="icon" style="--c:#3ddc84">·</div>
+        <h2>Korrutusplokid</h2>
+        <p>Korrutustabel ja jagamine. Iga õige vastus annab ploki, täis read kaovad.</p>
+        <span class="tag">Korrutamine ja jagamine</span>
+      </a>
+    </li>
+    <!-- Uue ülesande lisamiseks kopeeri ülemine <li> ja muuda linki, nime ja kirjeldust. -->
+    <li>
+      <div class="card soon">
+        <div class="icon" style="--c:#2ec4ff">½</div>
+        <h2>Murrupitsa</h2>
+        <p>Murrud ja nende võrdlemine.</p>
+        <span class="tag">Varsti</span>
+      </div>
+    </li>
+    <li>
+      <div class="card soon">
+        <div class="icon" style="--c:#ffb020">▭</div>
+        <h2>Ehitaja</h2>
+        <p>Ümbermõõt ja pindala.</p>
+        <span class="tag">Varsti</span>
+      </div>
+    </li>
+    <li>
+      <div class="card soon">
+        <div class="icon" style="--c:#ff7ad9">⏰</div>
+        <h2>Kellameister</h2>
+        <p>Aeg, kell ja ajaühikud.</p>
+        <span class="tag">Varsti</span>
+      </div>
+    </li>
+  </ul>
+
+  <footer>Tehtud kodus harjutamiseks 💜</footer>
+</div>
+</body>
+</html>
