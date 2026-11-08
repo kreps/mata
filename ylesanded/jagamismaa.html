@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="et">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jagamismaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#24166a; --bg2:#4b1f93;
+  --ink:#170d33;
+  --text:#ffffff;
+  --muted:#cbbff7;
+  --cell:#35277f;
+  --boardbg:#1b1150;
+  --good:#3ddc84; --bad:#ff5a6e; --gold:#ffd23f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:'Fredoka',system-ui,sans-serif;color:var(--text);
+  background:
+    radial-gradient(circle at 15% -5%, #7a3cf0 0%, transparent 45%),
+    radial-gradient(circle at 110% 90%, #e2408f55 0%, transparent 40%),
+    linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  overflow-x:hidden;user-select:none;-webkit-user-select:none;
+}
+.wrap{max-width:460px;margin:0 auto;padding:12px 16px 28px;min-height:100vh;display:flex;flex-direction:column}
+.hidden{display:none!important}
+.screen{display:flex;flex-direction:column;gap:14px;flex:1}
+
+/* ---------- ühised nupud ---------- */
+.btn{
+  font:inherit;font-weight:700;font-size:22px;color:var(--ink);
+  background:#fff;border:3px solid var(--ink);border-radius:16px;padding:12px;
+  box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.play{background:var(--good);font-size:30px;padding:16px}
+.btn.alt{background:#8f7cf0;color:#fff}
+.icon-btn{
+  width:44px;height:44px;flex:none;display:grid;place-items:center;padding:0;
+  font:inherit;font-size:22px;font-weight:700;color:var(--ink);text-decoration:none;
+  background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:0 4px 0 var(--ink);cursor:pointer;
+}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.link-btn{background:none;border:0;color:var(--muted);font:inherit;font-size:16px;text-decoration:underline;cursor:pointer;align-self:center;padding:6px}
+a.back{color:var(--muted);text-decoration:none;font-size:16px}
+
+.blk, .cell.f{
+  background:var(--c);
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.5), 0 0 0 1.5px rgba(0,0,0,.35);
+}
+
+/* ---------- algusekraan ---------- */
+.logo-blocks{display:grid;grid-template-columns:repeat(4,22px);gap:4px;justify-content:center;margin-top:22px}
+.logo-blocks .blk{width:22px;height:22px;border-radius:5px}
+h1.logo{
+  margin:6px 0 0;text-align:center;font-size:46px;line-height:1;color:var(--gold);
+  -webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+  text-shadow:0 5px 0 var(--ink);
+}
+.sub{text-align:center;color:var(--muted);margin:0;font-size:17px}
+.card{background:rgba(255,255,255,.08);border:3px solid rgba(0,0,0,.35);border-radius:20px;padding:14px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.card h2{margin:0 0 10px;font-size:18px;color:var(--muted);font-weight:600}
+.howto{font-size:15px;color:var(--muted);line-height:1.45;margin:0;padding-left:20px}
+.best{text-align:center;color:var(--gold);font-weight:600}
+
+/* ---------- mänguekraan ---------- */
+.hud{display:flex;align-items:center;gap:8px}
+.stat{flex:1;min-width:0;text-align:center;background:rgba(0,0,0,.25);border:2px solid rgba(0,0,0,.3);border-radius:12px;padding:3px 6px}
+.stat .lbl{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.stat .val{font-size:21px;font-weight:700;display:inline-block}
+
+.task{
+  text-align:center;font-size:24px;font-weight:700;color:var(--ink);background:#fff;
+  border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:8px 10px;line-height:1.2;
+}
+.task b{color:#8b5cff}
+.progress{text-align:center;color:var(--muted);font-size:16px;margin-top:-4px}
+
+.board{
+  position:relative;display:grid;gap:3px;padding:6px;
+  background:var(--boardbg);border:3px solid var(--ink);border-radius:16px;
+  box-shadow:0 6px 0 var(--ink), inset 0 0 0 2px rgba(255,255,255,.06);
+  touch-action:none;margin:0 auto;width:100%;
+}
+.cell{aspect-ratio:1;border-radius:5px;background:var(--cell);box-shadow:inset 0 3px 0 rgba(0,0,0,.25);
+  display:grid;place-items:center;font-weight:700;color:var(--ink);font-size:var(--fs,16px);line-height:1;cursor:crosshair}
+.cell.f{cursor:pointer}
+.cell .n{animation:popIn .25s ease-out backwards}
+.frame{
+  pointer-events:none;z-index:2;border:3px solid var(--ink);border-radius:8px;margin:-2px;
+  display:grid;place-items:center;
+}
+.frame.pv{border-style:dashed;border-color:#fff;background:rgba(255,255,255,.18)}
+.frame.pv.bad{border-color:var(--bad);background:rgba(255,90,110,.25)}
+.badge{
+  background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;
+  padding:1px 8px;font-weight:700;font-size:20px;white-space:nowrap;box-shadow:0 3px 0 var(--ink)
+}
+.badge.wrong{background:var(--bad);color:#fff}
+.board.shake{animation:shake .3s}
+.board.win .frame{animation:bump .45s}
+
+.panel{min-height:200px;display:flex;flex-direction:column}
+.q{
+  text-align:center;font-size:46px;font-weight:700;color:var(--ink);background:#fff;
+  border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:4px 8px;margin-bottom:14px;
+}
+.q .eq{color:#8f7cf0}
+.q.done{background:var(--good)}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ans{font-size:32px;padding:10px}
+.ans.ok{background:var(--good)}
+.ans.no{background:var(--bad);color:#fff;animation:shake .35s}
+.ans.show{background:var(--good);animation:bump .4s}
+.msg{min-height:30px;text-align:center;font-size:19px;font-weight:700;margin-top:4px;color:var(--gold);line-height:1.3}
+.msg.badmsg{color:#ffd0d6}
+.tools{display:flex;justify-content:center;gap:14px}
+
+/* ---------- lõpuekraan ---------- */
+.end-title{text-align:center;font-size:38px;margin:28px 0 0;color:var(--gold);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ink)}
+.big-score{text-align:center;font-size:72px;font-weight:700;line-height:1;margin:6px 0 0}
+.center{text-align:center;margin:0}
+.missed{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.missed span{background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;padding:4px 10px;font-weight:700;font-size:19px;box-shadow:0 3px 0 var(--ink)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes bump{50%{transform:scale(1.06)}}
+@keyframes popIn{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== ALGUS ===== -->
+  <section class="screen" id="start">
+    <a class="back" href="../index.html">← Kõik ülesanded</a>
+    <div class="logo-blocks" aria-hidden="true">
+      <div class="blk" style="--c:#ff5a6e"></div><div class="blk" style="--c:#ff5a6e"></div>
+      <div class="blk" style="--c:#2ec4ff"></div><div class="blk" style="--c:#2ec4ff"></div>
+      <div class="blk" style="--c:#ffd23f"></div><div class="blk" style="--c:#ffd23f"></div>
+      <div class="blk" style="--c:#3ddc84"></div><div class="blk" style="--c:#3ddc84"></div>
+    </div>
+    <h1 class="logo">Jagamismaa</h1>
+    <p class="sub">Jaga maa võrdseteks osadeks!</p>
+
+    <div class="card">
+      <ul class="howto">
+        <li>Vea sõrme või hiirega üle ruutude. Nii tekib üks osa.</li>
+        <li>Jaga kõik ruudud nii, et osi on õige arv ja kõik on ühesuurused.</li>
+        <li>Osale koputades saad selle kustutada.</li>
+        <li>Kui jaotus on õige, vasta küsimusele: mitu ruutu on ühes osas?</li>
+        <li>Mängus on 8 ringi. Iga ringiga läheb natuke raskemaks.</li>
+      </ul>
+    </div>
+
+    <p class="best" id="bestStart"></p>
+    <button class="btn play" id="playBtn">Mängi! ▶</button>
+  </section>
+
+  <!-- ===== MÄNG ===== -->
+  <section class="screen hidden" id="game">
+    <header class="hud">
+      <a class="icon-btn" href="../index.html" aria-label="Tagasi ülesannete juurde">←</a>
+      <div class="stat"><span class="lbl">Ring</span><span class="val" id="roundVal">1/8</span></div>
+      <div class="stat"><span class="lbl">Esimese korraga</span><span class="val" id="firstVal">0</span></div>
+      <button class="icon-btn" id="soundBtn" aria-label="Heli">🔊</button>
+    </header>
+
+    <div class="task" id="task"></div>
+    <div class="progress" id="progress"></div>
+
+    <div class="board" id="board"></div>
+
+    <div class="panel">
+      <div id="qBox" class="hidden">
+        <div class="q" id="qText"></div>
+        <div class="answers" id="answers"></div>
+      </div>
+      <div class="msg" id="msg"></div>
+      <div class="tools" id="drawTools">
+        <button class="link-btn" id="clearBtn">Tühjenda kõik</button>
+      </div>
+      <button class="btn play hidden" id="nextBtn">Järgmine ring ▶</button>
+    </div>
+
+    <button class="link-btn" id="quitBtn">Lõpeta mäng</button>
+  </section>
+
+  <!-- ===== LÕPP ===== -->
+  <section class="screen hidden" id="end">
+    <h1 class="end-title" id="endTitle">Tubli!</h1>
+    <div class="big-score" id="endScore">0/8</div>
+    <p class="center">jagasid esimese katsega õigesti</p>
+    <p class="center" id="endRecord"></p>
+    <div class="card">
+      <p class="center" id="endStats"></p>
+    </div>
+    <div class="card">
+      <h2 id="missedTitle">Harjuta neid veel:</h2>
+      <div class="missed" id="missed"></div>
+    </div>
+    <button class="btn play" id="againBtn">Mängi uuesti ↻</button>
+    <a class="back" href="../index.html" style="text-align:center">← Kõik ülesanded</a>
+  </section>
+
+</div>
+
+<script src="../seaded.js"></script>
+<script>
+(() => {
+  const ROUNDS = 8;
+  const COLORS = ['#ff5a6e','#ffb020','#ffd23f','#3ddc84','#2ec4ff','#8b5cff','#ff7ad9','#7ee8fa','#c3f584'];
+  const PRAISE = ['Õige!','Super!','Tubli!','Äge!','Vau!','Täpselt!','Nii see on!'];
+  // Iga ringi raskus: osade arv (k) ja ruutude ülempiir.
+  const LEVELS = [
+    { k: [2, 2], max: 12 },
+    { k: [3, 3], max: 18 },
+    { k: [2, 4], max: 24 },
+    { k: [3, 5], max: 36 },
+    { k: [4, 6], max: 48 },
+    { k: [5, 7], max: 64 },
+    { k: [6, 8], max: 81 },
+    { k: [5, 9], max: 100 }
+  ];
+
+  const $ = id => document.getElementById(id);
+  const rand = n => Math.floor(Math.random() * n);
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  const S = { sound: store.get('jm-sound', true) };
+
+  /* ---------- heli ---------- */
+  let AC = null;
+  function tone(f, d = .12, type = 'square', v = .05, delay = 0) {
+    if (!S.sound) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02);
+    } catch (e) {}
+  }
+  const SFX = {
+    good: () => { tone(660); tone(880, .16, 'square', .05, .08); },
+    bad: () => tone(170, .28, 'sawtooth', .04),
+    place: () => tone(260, .07, 'triangle', .09),
+    remove: () => tone(200, .08, 'triangle', .07),
+    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .13, 'square', .05, i * .08))
+  };
+
+  /* ---------- ekraanid ---------- */
+  function show(id) { ['start','game','end'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); }
+  function syncStart() {
+    const best = store.get('jm-best', null);
+    $('bestStart').textContent = best !== null ? `🏆 Parim tulemus: ${best}/${ROUNDS} esimese katsega` : '';
+  }
+  syncStart();
+
+  /* ---------- ringi loomine ---------- */
+  // R×C ruudustiku saab jagada k võrdseks ristkülikuks, kui k = a·b, kus a jagab R-i ja b jagab C-d.
+  function canSplit(R, C, k) {
+    for (let a = 1; a <= k; a++) if (k % a === 0 && R % a === 0 && C % (k / a) === 0) return true;
+    return false;
+  }
+  function makeRound(i) {
+    const L = LEVELS[i], lo = Math.round(L.max * .5), cand = [];
+    for (let k = L.k[0]; k <= L.k[1]; k++)
+      for (let R = 2; R <= 10; R++)
+        for (let C = R; C <= 10; C++) {
+          const N = R * C;
+          if (N < lo || N > L.max || N % k || N / k < 2) continue;
+          if (C / R > 2.5 || !canSplit(R, C, k)) continue;
+          if (S.used.has(N + ':' + k)) continue;
+          cand.push({ R, C, k, N, q: N / k });
+        }
+    const r = cand[rand(cand.length)];
+    S.used.add(r.N + ':' + r.k);
+    return r;
+  }
+
+  /* ---------- laud ---------- */
+  const boardEl = $('board');
+  let cells = [];
+  function buildBoard() {
+    const { R, C } = S.rd;
+    boardEl.innerHTML = '';
+    boardEl.style.gridTemplateColumns = `repeat(${C}, 1fr)`;
+    // ruudud ei tohi olla liiga suured, kui ruudustik on väike
+    boardEl.style.maxWidth = Math.min(428, C * 58 + 18) + 'px';
+    cells = [];
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      const d = document.createElement('div');
+      d.className = 'cell'; d.dataset.i = r * C + c;
+      d.style.gridRow = r + 1; d.style.gridColumn = c + 1;
+      boardEl.appendChild(d); cells.push(d);
+    }
+    requestAnimationFrame(() => {
+      const w = cells[0].getBoundingClientRect().width;
+      boardEl.style.setProperty('--fs', Math.max(10, Math.round(w * .45)) + 'px');
+    });
+  }
+  function frameEl(p, cls) {
+    const f = document.createElement('div');
+    f.className = 'frame' + (cls ? ' ' + cls : '');
+    f.style.gridRow = `${p.r + 1} / span ${p.h}`;
+    f.style.gridColumn = `${p.c + 1} / span ${p.w}`;
+    return f;
+  }
+  function render() {
+    const { C } = S.rd;
+    boardEl.querySelectorAll('.frame').forEach(f => f.remove());
+    cells.forEach((d, i) => {
+      const id = S.owner[i];
+      const p = id == null ? null : S.parts.find(x => x.id === id);
+      d.className = 'cell' + (p ? ' f' : '');
+      d.style.setProperty('--c', p ? p.color : 'transparent');
+      if (p && S.phase === 'done') {
+        const r = Math.floor(i / C) - p.r, c = (i % C) - p.c;
+        d.innerHTML = `<span class="n" style="animation-delay:${(r * p.w + c) * 25}ms">${r * p.w + c + 1}</span>`;
+      } else d.textContent = '';
+    });
+    const sizes = S.parts.map(p => p.h * p.w);
+    const common = mostCommon(sizes);
+    S.parts.forEach(p => {
+      const f = frameEl(p);
+      if (S.showCounts && S.phase === 'draw') {
+        const n = p.h * p.w;
+        const b = document.createElement('span');
+        b.className = 'badge' + (S.parts.length === S.rd.k && n !== common ? ' wrong' : '');
+        b.textContent = n;
+        f.appendChild(b);
+      }
+      boardEl.appendChild(f);
+    });
+    if (S.drag) {
+      const p = rectOf(S.drag.a, S.drag.b);
+      const f = frameEl(p, 'pv' + (free(p) ? '' : ' bad'));
+      const b = document.createElement('span');
+      b.className = 'badge'; b.textContent = `${p.h} × ${p.w}`;
+      f.appendChild(b);
+      boardEl.appendChild(f);
+    }
+    const filled = S.owner.filter(x => x != null).length;
+    $('progress').textContent = `Jagatud ${filled} / ${S.rd.N} ruutu · osi ${S.parts.length}`;
+  }
+  function mostCommon(arr) {
+    const m = new Map(); let best = null, bn = 0;
+    arr.forEach(v => { const n = (m.get(v) || 0) + 1; m.set(v, n); if (n > bn) { bn = n; best = v; } });
+    return best;
+  }
+  function rectOf(a, b) {
+    const C = S.rd.C;
+    const r1 = Math.floor(a / C), c1 = a % C, r2 = Math.floor(b / C), c2 = b % C;
+    const r = Math.min(r1, r2), c = Math.min(c1, c2);
+    return { r, c, h: Math.abs(r1 - r2) + 1, w: Math.abs(c1 - c2) + 1 };
+  }
+  function free(p) {
+    const C = S.rd.C;
+    for (let r = p.r; r < p.r + p.h; r++) for (let c = p.c; c < p.c + p.w; c++) if (S.owner[r * C + c] != null) return false;
+    return true;
+  }
+
+  /* ---------- joonistamine ---------- */
+  // Leiab ruudu koordinaatide järgi; väljaspool lauda kinnitub lähima ääreruudu külge.
+  function cellAt(e, strict) {
+    const { R, C } = S.rd;
+    const a = cells[0].getBoundingClientRect(), z = cells[cells.length - 1].getBoundingClientRect();
+    const sx = (z.left - a.left) / (C - 1), sy = (z.top - a.top) / (R - 1);
+    const gx = (sx - a.width) / 2, gy = (sy - a.height) / 2;
+    let c = Math.floor((e.clientX - a.left + gx) / sx), r = Math.floor((e.clientY - a.top + gy) / sy);
+    if (strict && (c < 0 || c >= C || r < 0 || r >= R)) return -1;
+    c = Math.max(0, Math.min(C - 1, c)); r = Math.max(0, Math.min(R - 1, r));
+    return r * C + c;
+  }
+  let tap = null;
+  boardEl.addEventListener('pointerdown', e => {
+    if (S.phase !== 'draw' || S.drag || tap) return;
+    const i = cellAt(e, true); if (i < 0) return;
+    e.preventDefault();
+    if (S.owner[i] != null) tap = { id: S.owner[i], i };
+    else { S.drag = { a: i, b: i }; render(); }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    if (tap) { if (cellAt(e, true) !== tap.i) tap = null; return; }
+    if (!S.drag) return;
+    const i = cellAt(e, false);
+    if (i !== S.drag.b) { S.drag.b = i; render(); }
+  }
+  function unlisten() {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+  }
+  function onUp() {
+    unlisten();
+    if (tap) { const id = tap.id; tap = null; removePart(id); return; }
+    if (!S.drag) return;
+    const p = rectOf(S.drag.a, S.drag.b);
+    S.drag = null;
+    if (!free(p)) { render(); shake(); SFX.bad(); setMsg('Osad ei tohi kattuda.', true); return; }
+    addPart(p);
+  }
+  function onCancel() { unlisten(); tap = null; S.drag = null; render(); }
+
+  function addPart(p) {
+    const C = S.rd.C;
+    p.id = S.nextId++;
+    p.color = COLORS[p.id % COLORS.length];
+    S.parts.push(p);
+    for (let r = p.r; r < p.r + p.h; r++) for (let c = p.c; c < p.c + p.w; c++) S.owner[r * C + c] = p.id;
+    SFX.place();
+    setMsg('');
+    render();
+    if (S.owner.every(x => x != null)) check();
+  }
+  function removePart(id) {
+    S.parts = S.parts.filter(p => p.id !== id);
+    S.owner = S.owner.map(x => x === id ? null : x);
+    SFX.remove();
+    render();
+  }
+  function shake() { boardEl.classList.remove('shake'); void boardEl.offsetWidth; boardEl.classList.add('shake'); }
+  function setMsg(t, bad) { const m = $('msg'); m.textContent = t || ''; m.classList.toggle('badmsg', !!bad); }
+
+  /* ---------- kontroll ---------- */
+  function check() {
+    const { k } = S.rd;
+    const sizes = S.parts.map(p => p.h * p.w);
+    const okCount = S.parts.length === k;
+    const okEq = sizes.every(s => s === sizes[0]);
+    S.attempts++;
+    if (okCount && okEq) {
+      if (S.attempts === 1) S.firstTry++;
+      S.splitOk++;
+      S.showCounts = false;
+      SFX.win();
+      boardEl.classList.remove('win'); void boardEl.offsetWidth; boardEl.classList.add('win');
+      setMsg(PRAISE[rand(PRAISE.length)] + ' Jaotus on õige!');
+      updateHud();
+      setTimeout(ask, 700);
+      return;
+    }
+    S.showCounts = true;
+    SFX.bad(); shake();
+    const n = S.parts.length;
+    let t;
+    if (!okCount && !okEq) t = `Vaja on ${k} võrdset osa. Sul on ${n} osa ja need pole ühesuurused.`;
+    else if (!okCount) t = `Osad on ühesuurused, aga neid on ${n}. Vaja on ${k} osa.`;
+    else t = `Osi on ${k}, aga need pole ühesuurused.`;
+    setMsg(t + ' Koputa osale, et see kustutada.', true);
+    render();
+  }
+
+  /* ---------- küsimus ---------- */
+  function options(n, k) {
+    const set = new Set();
+    shuffle([n + 1, n - 1, n + 2, n - 2, k, n + k, n * 2]).forEach(v => { if (v > 0 && v !== n && set.size < 3) set.add(v); });
+    let j = 1;
+    while (set.size < 3) { if (!set.has(n + j)) set.add(n + j); j++; }
+    return shuffle([n, ...set]);
+  }
+  function ask() {
+    S.phase = 'ask';
+    const { N, k, q } = S.rd;
+    $('drawTools').classList.add('hidden');
+    $('qBox').classList.remove('hidden');
+    $('qText').className = 'q';
+    $('qText').innerHTML = `${N} : ${k} <span class="eq">= ?</span>`;
+    setMsg('Mitu ruutu on ühes osas?');
+    const ans = $('answers'); ans.innerHTML = '';
+    options(q, k).forEach(v => {
+      const b = document.createElement('button');
+      b.className = 'btn ans'; b.textContent = v; b.dataset.v = v;
+      b.onclick = () => answer(b, v);
+      ans.appendChild(b);
+    });
+    S.locked = false;
+  }
+  function answer(btn, v) {
+    if (S.locked) return;
+    S.locked = true;
+    const { N, k, q } = S.rd;
+    const fact = `${N} : ${k} = ${q}`;
+    if (v === q) {
+      btn.classList.add('ok');
+      S.ansOk++;
+      SFX.good();
+      setMsg(PRAISE[rand(PRAISE.length)]);
+    } else {
+      btn.classList.add('no');
+      document.querySelectorAll('.ans').forEach(b => { if (+b.dataset.v === q) b.classList.add('show'); });
+      SFX.bad();
+      S.missed.push(fact);
+      setMsg(`Õige on ${q}. Loe üle, mitu ruutu on ühes osas!`, true);
+    }
+    setTimeout(() => finishRound(fact), 900);
+  }
+  function finishRound(fact) {
+    S.phase = 'done';
+    S.done++;
+    render();
+    $('answers').innerHTML = '';
+    $('qText').className = 'q done';
+    $('qText').textContent = fact;
+    $('nextBtn').textContent = S.round + 1 < ROUNDS ? 'Järgmine ring ▶' : 'Vaata tulemust 🏁';
+    $('nextBtn').classList.remove('hidden');
+  }
+
+  /* ---------- ringid ---------- */
+  function updateHud() {
+    $('roundVal').textContent = `${S.round + 1}/${ROUNDS}`;
+    $('firstVal').textContent = S.firstTry;
+    $('soundBtn').textContent = S.sound ? '🔊' : '🔇';
+  }
+  function startRound() {
+    S.rd = makeRound(S.round);
+    Object.assign(S, { parts: [], owner: Array(S.rd.N).fill(null), nextId: rand(COLORS.length), drag: null,
+      attempts: 0, showCounts: false, phase: 'draw', locked: false });
+    $('task').innerHTML = `Jaga <b>${S.rd.N}</b> ruutu <b>${S.rd.k}</b> võrdseks osaks`;
+    $('qBox').classList.add('hidden');
+    $('nextBtn').classList.add('hidden');
+    $('drawTools').classList.remove('hidden');
+    boardEl.classList.remove('win');
+    setMsg('');
+    updateHud();
+    buildBoard();
+    render();
+  }
+  function startGame() {
+    Object.assign(S, {
+      round: 0, firstTry: 0, splitOk: 0, ansOk: 0, done: 0, missed: [], used: new Set(),
+      sent: false, startedAt: Date.now()
+    });
+    show('game');
+    startRound();
+  }
+  function nextRound() {
+    S.round++;
+    if (S.round >= ROUNDS) endGame(true);
+    else startRound();
+  }
+  function endGame(full) {
+    if (S.drag || tap) onCancel();
+    S.phase = 'over';
+    const best = store.get('jm-best', null);
+    const rec = full && (best === null || S.firstTry > best);
+    if (rec) store.set('jm-best', S.firstTry);
+    $('endTitle').textContent = full ? (S.firstTry >= 6 ? 'Super!' : 'Tubli!') : 'Mäng läbi!';
+    $('endScore').textContent = `${S.firstTry}/${full ? ROUNDS : S.done}`;
+    $('endRecord').textContent = rec ? '🏆 Uus rekord!' : (best !== null ? `Parim: ${best}/${ROUNDS}` : '');
+    $('endStats').textContent = S.done
+      ? `Ringe tehtud ${S.done}/${ROUNDS} · jagamistehteid õigesti ${S.ansOk}/${S.done}`
+      : 'Ühtegi ringi ei lõpetatud.';
+    const ms = $('missed'); ms.innerHTML = '';
+    $('missedTitle').textContent = S.missed.length ? 'Harjuta neid veel:' : (S.done ? 'Ühtegi viga tehtes! 🌟' : '');
+    S.missed.forEach(f => { const s = document.createElement('span'); s.textContent = f; ms.appendChild(s); });
+    report(full ? 'kõik ringid tehtud' : 'lõpetas ise');
+    show('end');
+  }
+
+  /* ---------- tulemuse saatmine vanemale ---------- */
+  function report(kuidas) {
+    if (S.sent || !S.done || !window.saadaTulemus) return;
+    S.sent = true;
+    const mins = Math.max(1, Math.round((Date.now() - S.startedAt) / 60000));
+    const tekst = [
+      `Esimese katsega õigesti jagatud: ${S.firstTry}/${S.done}`,
+      `Jagamistehted õigesti: ${S.ansOk}/${S.done} (${Math.round(100 * S.ansOk / S.done)}%)`,
+      `Ringe: ${S.done}/${ROUNDS} · aeg ~${mins} min · ${kuidas}`,
+      S.missed.length ? `Vead: ${S.missed.join('; ')}` : 'Vigu polnud 🌟'
+    ].join('\n');
+    window.saadaTulemus('Jagamismaa tehtud', tekst);
+  }
+  // Kui laps paneb lehe kinni kesk mängu, saadetakse ikkagi seni tehtu.
+  window.addEventListener('pagehide', () => { if (!$('game').classList.contains('hidden')) report('jäi pooleli'); });
+
+  $('playBtn').onclick = () => { tone(1, .01); startGame(); };
+  $('againBtn').onclick = startGame;
+  $('nextBtn').onclick = nextRound;
+  $('clearBtn').onclick = () => {
+    if (S.phase !== 'draw' || !S.parts.length) return;
+    S.parts = []; S.owner.fill(null); S.showCounts = false; setMsg(''); SFX.remove(); render();
+  };
+  $('quitBtn').onclick = () => endGame(false);
+  $('soundBtn').onclick = () => { S.sound = !S.sound; store.set('jm-sound', S.sound); updateHud(); };
+})();
+</script>
+</body>
+</html>
