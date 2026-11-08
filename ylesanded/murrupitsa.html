@@ -180,7 +180,7 @@ svg.pizza .dot{pointer-events:none}
   const ROUNDS = PLAN.length;
   const NAMES = ['Mia', 'Kaspar', 'Liisa', 'Oskar', 'Emma', 'Robin', 'Mari', 'Karl'];
   const PRAISE = ['Õige!', 'Super!', 'Tubli!', 'Äge!', 'Vau!', 'Täpselt!', 'Nii see on!'];
-  const C = { crust: '#d99a4e', cheese: '#ffd66b', pep: '#d6402f', mush: '#efe3cf', mushLine: '#8b6a4a', line: '#c4882f', ink: '#170d33' };
+  const C = { crust: '#d99a4e', cheese: '#ffd66b', pep: '#d6402f', mush: '#efe3cf', mushLine: '#8b6a4a', olive: '#2b2a33', line: '#c4882f', ink: '#170d33' };
 
   const $ = id => document.getElementById(id);
   const rand = n => Math.floor(Math.random() * n);
@@ -216,10 +216,18 @@ svg.pizza .dot{pointer-events:none}
   };
 
   /* ---------- pitsa joonistamine ---------- */
-  // Pitsa n tükiga. t = { pep, mush, gone }: millistel tükkidel on pepperoni, millistel seened
+  // Katted. Iga ülesanne valib, millise katte kohta küsitakse.
+  const TOPS = {
+    pep: { name: 'pepperoni', with: 'pepperoniga' },
+    mush: { name: 'seened', with: 'seentega' },
+    olive: { name: 'oliivid', with: 'oliividega' }
+  };
+  const TOP_KEYS = Object.keys(TOPS);
+  const cap = t => t[0].toUpperCase() + t.slice(1);
+  // Pitsa n tükiga. t = { pep, mush, olive, gone }: millistel tükkidel on milline kate
   // ja millised on ära söödud. groups = mitmeks rühmaks paksud jooned pitsa jagavad.
   function pizzaSVG(n, t, o = {}) {
-    const pep = t.pep || new Set(), mush = t.mush || new Set(), gone = t.gone || new Set();
+    const pep = t.pep || new Set(), mush = t.mush || new Set(), olive = t.olive || new Set(), gone = t.gone || new Set();
     const size = o.size || 220, cx = 110, cy = 110, r = 94, R = 107;
     const pt = (rad, deg) => [cx + rad * Math.cos(deg * Math.PI / 180), cy + rad * Math.sin(deg * Math.PI / 180)];
     const wedge = (rad, a0, a1) => {
@@ -247,6 +255,12 @@ svg.pizza .dot{pointer-events:none}
       if (gone.has(i)) return;
       spotsFor(i).forEach(([x, y]) => {
         s += `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${pr}" fill="${C.pep}" stroke="#9e2a1f" stroke-width="1.5"/>`;
+      });
+    });
+    olive.forEach(i => {
+      if (gone.has(i)) return;
+      spotsFor(i).forEach(([x, y]) => {
+        s += `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(pr * .8).toFixed(1)}" fill="none" stroke="${C.olive}" stroke-width="${(pr * .55).toFixed(1)}"/>`;
       });
     });
     mush.forEach(i => {
@@ -330,7 +344,7 @@ svg.pizza .dot{pointer-events:none}
       return {
         kind: 'choice',
         task: `${who} sõi ${fr(k, n)} pitsast. Kui suur osa pitsast jäi alles?`,
-        pizzas: [{ n, ...mixToppings(n, range(0, k, n)), gone: range(0, k, n) }],
+        pizzas: [{ n, filled: new Set(), extra: mixToppings(n, range(0, k, n)), gone: range(0, k, n) }],
         options: fracOptions(n - k, n, [[k, n], [n - k - 1, n], [n - k + 1, n], [n - k, k], [n - k, n + 1]]),
         ans: ft(n - k, n),
         fact: `1 − ${ft(k, n)} = ${ft(n - k, n)}`,
@@ -338,45 +352,44 @@ svg.pizza .dot{pointer-events:none}
       };
     }
   };
-  // Pitsal on pepperoni- ja seenetükid (ja vahel paar tükki ainult juustuga).
-  // Küsitakse ühe katte kohta, teine kate on segaja.
+  // Pitsal on mitu katet (ja vahel paar tükki ainult juustuga).
+  // Küsitakse ühe katte kohta, teised katted on segajad.
   function makeWhich(n) {
-    const p = randIn(1, n - 1), m = randIn(1, n - p), off = rand(n);
-    const pep = range(off, p, n), mush = range(off + p, m, n);
-    const askPep = Math.random() < .5, k = askPep ? p : m, other = askPep ? m : p;
-    const what = askPep ? 'pepperoniga' : 'seentega';
+    const [ask, o1, o2] = shuffle([...TOP_KEYS]);
+    const k = randIn(1, n - 1), m1 = randIn(n - k > 1 ? 1 : 0, n - k), m2 = randIn(0, n - k - m1), off = rand(n);
+    const what = TOPS[ask].with;
     return {
       kind: 'choice',
       task: `Mis osa pitsast on <u>${what}</u>?`,
-      pizzas: [{ n, filled: pep, mush }],
-      options: fracOptions(k, n, [[other, n], [n - k, n], [k, other], [k, n + 1], [k + 1, n], [k - 1, n], [k, n - 1]]),
+      pizzas: [{ n, top: ask, filled: range(off, k, n), extra: { [o1]: range(off + k, m1, n), [o2]: range(off + k + m1, m2, n) } }],
+      options: fracOptions(k, n, [[m1, n], [m2, n], [n - k, n], [k, m1], [k, n + 1], [k + 1, n], [k - 1, n], [k, n - 1]]),
       ans: ft(k, n),
       fact: `${what} ${ft(k, n)}`,
       why: `Pitsas on ${n} võrdset tükki ja ${k} neist on ${what}: ${fr(k, n)}.`
     };
   }
-  // Iga tükk saab juhusliku katte: pepperoni, seened või ainult juust.
+  // Iga tükk saab juhusliku katte või jääb ainult juustuga.
   function mixToppings(n, skip = new Set()) {
-    const pep = new Set(), mush = new Set();
-    for (let i = 0; i < n; i++) if (!skip.has(i)) { const r = rand(3); if (r === 0) pep.add(i); else if (r === 1) mush.add(i); }
-    return { filled: pep, mush };
+    const out = {}; TOP_KEYS.forEach(t => { out[t] = new Set(); });
+    for (let i = 0; i < n; i++) if (!skip.has(i)) { const r = rand(TOP_KEYS.length + 1); if (r < TOP_KEYS.length) out[TOP_KEYS[r]].add(i); }
+    return out;
   }
   function makeColor(n) {
-    const k = randIn(1, n - 1);
+    const k = randIn(1, n - 1), top = pick(TOP_KEYS), name = TOPS[top].name;
     return {
-      kind: 'color', n, k,
-      task: `Koputa tükkidele ja pane pepperoni ${fr(k, n)} pitsale.`,
-      pizzas: [{ n, filled: new Set(), clickable: true }],
+      kind: 'color', n, k, top,
+      task: `Koputa tükkidele ja pane ${name} ${fr(k, n)} pitsale.`,
+      pizzas: [{ n, top, filled: new Set(), clickable: true }],
       ans: ft(k, n),
       fact: `värvi ${ft(k, n)}`,
-      why: `${fr(k, n)} tähendab: pitsas on ${n} tükki ja pepperoni käib ${k} tüki peale.`
+      why: `${fr(k, n)} tähendab: pitsas on ${n} tükki ja ${name} tuleb panna ${k} tükile.`
     };
   }
   function makeCompare(a, b, c, d, why) {
     return {
       kind: 'compare',
       task: 'Kumb on suurem? Vali märk.',
-      pizzas: [{ n: b, filled: range(0, a, b), label: fr(a, b) }, { n: d, filled: range(0, c, d), label: fr(c, d) }],
+      pizzas: (top => [{ n: b, top, filled: range(0, a, b), label: fr(a, b) }, { n: d, top, filled: range(0, c, d), label: fr(c, d) }])(pick(TOP_KEYS)),
       options: ['<', '=', '>'].map(v => ({ html: v, val: v })),
       ans: sign(a, b, c, d),
       fact: `${ft(a, b)} ${sign(a, b, c, d)} ${ft(c, d)}`,
@@ -388,7 +401,7 @@ svg.pizza .dot{pointer-events:none}
     return {
       kind: 'choice',
       task: `Pitsas on ${N} tükki. ${who} sõi ${fr(k, d)} pitsast. Mitu tükki ${who} sõi?`,
-      pizzas: [{ n: N, filled: range(0, N, N), groups: d }],
+      pizzas: [{ n: N, top: pick(TOP_KEYS), filled: range(0, N, N), groups: d }],
       after: range(0, a, N),
       options: numOptions(a, [u, N - a, a + u, a - u, k, d, a + 1, a - 1]),
       ans: String(a),
@@ -399,7 +412,7 @@ svg.pizza .dot{pointer-events:none}
 
   /* ---------- ekraanid ---------- */
   function show(id) { ['start', 'game', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); }
-  $('logoPizza').innerHTML = pizzaSVG(8, { pep: range(0, 3, 8), mush: range(3, 4, 8), gone: range(7, 1, 8) }, { size: 120 });
+  $('logoPizza').innerHTML = pizzaSVG(8, { pep: range(0, 3, 8), mush: range(3, 2, 8), olive: range(5, 2, 8), gone: range(7, 1, 8) }, { size: 120 });
   function syncStart() {
     const best = store.get('mp-best', null);
     $('bestStart').textContent = best !== null ? `🏆 Parim tulemus: ${best}/${ROUNDS}` : '';
@@ -417,9 +430,9 @@ svg.pizza .dot{pointer-events:none}
     const q = S.q, two = q.pizzas.length === 2;
     const size = two ? 140 : (q.pizzas[0].n > 8 ? 240 : 220);
     const parts = q.pizzas.map((p, i) =>
-      `<div class="pz" data-p="${i}">${pizzaSVG(p.n, { pep: p.filled, mush: p.mush, gone: p.gone }, { size, groups: p.groups, clickable: p.clickable })}${p.label ? `<div class="pz-lbl">${p.label}</div>` : ''}</div>`);
+      `<div class="pz" data-p="${i}">${pizzaSVG(p.n, { ...(p.extra || {}), [p.top || 'pep']: p.filled, gone: p.gone }, { size, groups: p.groups, clickable: p.clickable })}${p.label ? `<div class="pz-lbl">${p.label}</div>` : ''}</div>`);
     $('stage').innerHTML = two ? `${parts[0]}<div class="sign" id="sign">?</div>${parts[1]}` : parts[0];
-    $('counter').textContent = q.kind === 'color' ? `Pepperoniga tükke: ${q.pizzas[0].filled.size}` : '';
+    $('counter').textContent = q.kind === 'color' ? `${cap(TOPS[q.top].with)} tükke: ${q.pizzas[0].filled.size}` : '';
   }
   function newQuestion() {
     const q = S.q = GEN[PLAN[S.round]]();
@@ -446,7 +459,7 @@ svg.pizza .dot{pointer-events:none}
     }
     updateHud();
   }
-  // Värvimisülesandes tükile koputamine lisab või võtab pepperoni ära.
+  // Värvimisülesandes tükile koputamine lisab või võtab katte ära.
   $('stage').addEventListener('click', e => {
     const q = S.q;
     if (!q || q.kind !== 'color' || S.locked) return;
@@ -465,11 +478,11 @@ svg.pizza .dot{pointer-events:none}
     const ok = got === q.k;
     if (ok) {
       btn.classList.add('ok');
-      setMsg(`${pick(PRAISE)} Pepperoni on ${fr(q.k, q.n)} pitsal.`);
+      setMsg(`${pick(PRAISE)} ${cap(TOPS[q.top].name)} on ${fr(q.k, q.n)} pitsal.`);
     } else {
       btn.classList.add('no');
       $('stage').classList.remove('shake'); void $('stage').offsetWidth; $('stage').classList.add('shake');
-      setMsg(`Sa panid pepperoni ${got} tükile, vaja oli ${q.k}. ${q.why}`, true);
+      setMsg(`Sa panid ${TOPS[q.top].name} ${got} tükile, vaja oli ${q.k}. ${q.why}`, true);
       setTimeout(() => { q.pizzas[0].filled = range(0, q.k, q.n); q.pizzas[0].clickable = false; renderStage(); }, 700);
     }
     finish(ok);
