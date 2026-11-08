@@ -88,17 +88,19 @@ h1.logo{
   box-shadow:0 6px 0 var(--ink), inset 0 0 0 2px rgba(255,255,255,.06);
   touch-action:none;margin:0 auto;width:100%;
 }
-.cell{aspect-ratio:1;border-radius:5px;background:var(--cell);box-shadow:inset 0 3px 0 rgba(0,0,0,.25);
+.cell{aspect-ratio:1;min-width:0;overflow:hidden;border-radius:5px;background:var(--cell);box-shadow:inset 0 3px 0 rgba(0,0,0,.25);
   display:grid;place-items:center;font-weight:700;color:var(--ink);font-size:var(--fs,16px);line-height:1;cursor:crosshair}
 .cell.f{cursor:pointer}
 .cell .n{animation:popIn .25s ease-out backwards}
 .frame{
   pointer-events:none;z-index:2;border:3px solid var(--ink);border-radius:8px;margin:-2px;
-  display:grid;place-items:center;
+  position:relative;min-width:0;min-height:0;
 }
 .frame.pv{border-style:dashed;border-color:#fff;background:rgba(255,255,255,.18)}
 .frame.pv.bad{border-color:var(--bad);background:rgba(255,90,110,.25)}
+/* Silt on absoluutselt paigutatud, et see ei muudaks ruutude suurust. */
 .badge{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
   background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;
   padding:1px 8px;font-weight:700;font-size:20px;white-space:nowrap;box-shadow:0 3px 0 var(--ink)
 }
@@ -296,7 +298,7 @@ h1.logo{
   function buildBoard() {
     const { R, C } = S.rd;
     boardEl.innerHTML = '';
-    boardEl.style.gridTemplateColumns = `repeat(${C}, 1fr)`;
+    boardEl.style.gridTemplateColumns = `repeat(${C}, minmax(0, 1fr))`;
     // ruudud ei tohi olla liiga suured, kui ruudustik on väike
     boardEl.style.maxWidth = Math.min(428, C * 58 + 18) + 'px';
     cells = [];
