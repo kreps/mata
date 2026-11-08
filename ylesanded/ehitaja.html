@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="et">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ehitaja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#24166a; --bg2:#4b1f93;
+  --ink:#170d33;
+  --text:#ffffff;
+  --muted:#cbbff7;
+  --cell:#35277f;
+  --boardbg:#1b1150;
+  --good:#3ddc84; --bad:#ff5a6e; --gold:#ffd23f;
+  --grass:#3ddc84; --fence:#8a5326;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:'Fredoka',system-ui,sans-serif;color:var(--text);
+  background:
+    radial-gradient(circle at 15% -5%, #7a3cf0 0%, transparent 45%),
+    radial-gradient(circle at 110% 90%, #e2408f55 0%, transparent 40%),
+    linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  overflow-x:hidden;user-select:none;-webkit-user-select:none;
+}
+.wrap{max-width:460px;margin:0 auto;padding:12px 16px 28px;min-height:100vh;display:flex;flex-direction:column}
+.hidden{display:none!important}
+.screen{display:flex;flex-direction:column;gap:14px;flex:1}
+
+/* ---------- ühised nupud ---------- */
+.btn{
+  font:inherit;font-weight:700;font-size:22px;color:var(--ink);
+  background:#fff;border:3px solid var(--ink);border-radius:16px;padding:12px;
+  box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.play{background:var(--good);font-size:30px;padding:16px}
+.icon-btn{
+  width:44px;height:44px;flex:none;display:grid;place-items:center;padding:0;
+  font:inherit;font-size:22px;font-weight:700;color:var(--ink);text-decoration:none;
+  background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:0 4px 0 var(--ink);cursor:pointer;
+}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.link-btn{background:none;border:0;color:var(--muted);font:inherit;font-size:16px;text-decoration:underline;cursor:pointer;align-self:center;padding:6px}
+a.back{color:var(--muted);text-decoration:none;font-size:16px}
+
+.blk, .cell.f{
+  background:var(--c);
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.22), inset 0 3px 0 rgba(255,255,255,.45), 0 0 0 1.5px rgba(0,0,0,.3);
+}
+
+/* ---------- algusekraan ---------- */
+.logo-blocks{display:grid;grid-template-columns:repeat(5,20px);gap:3px;justify-content:center;margin-top:22px;
+  padding:5px;border:4px solid var(--fence);border-radius:8px;width:max-content;margin-left:auto;margin-right:auto}
+.logo-blocks .blk{width:20px;height:20px;border-radius:4px}
+h1.logo{
+  margin:6px 0 0;text-align:center;font-size:46px;line-height:1;color:var(--gold);
+  -webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+  text-shadow:0 5px 0 var(--ink);
+}
+.sub{text-align:center;color:var(--muted);margin:0;font-size:17px}
+.card{background:rgba(255,255,255,.08);border:3px solid rgba(0,0,0,.35);border-radius:20px;padding:14px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.card h2{margin:0 0 10px;font-size:18px;color:var(--muted);font-weight:600}
+.howto{font-size:15px;color:var(--muted);line-height:1.45;margin:0;padding-left:20px}
+.howto b{color:#fff}
+.best{text-align:center;color:var(--gold);font-weight:600}
+
+/* ---------- mänguekraan ---------- */
+.hud{display:flex;align-items:center;gap:8px}
+.stat{flex:1;min-width:0;text-align:center;background:rgba(0,0,0,.25);border:2px solid rgba(0,0,0,.3);border-radius:12px;padding:3px 6px}
+.stat .lbl{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.stat .val{font-size:21px;font-weight:700;display:inline-block}
+.stat .val.bump{animation:bump .3s}
+
+.task{
+  text-align:center;font-size:21px;font-weight:700;color:var(--ink);background:#fff;
+  border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:8px 12px;line-height:1.3;
+}
+.task b{color:#8b5cff}
+
+.board{
+  position:relative;display:grid;gap:3px;padding:6px;
+  background:var(--boardbg);border:3px solid var(--ink);border-radius:16px;
+  box-shadow:0 6px 0 var(--ink), inset 0 0 0 2px rgba(255,255,255,.06);
+  touch-action:none;width:100%;
+}
+.board.build .cell{cursor:crosshair}
+.cell{aspect-ratio:1;min-width:0;border-radius:4px;background:var(--cell);box-shadow:inset 0 3px 0 rgba(0,0,0,.25)}
+.frame{
+  pointer-events:none;z-index:2;border:4px solid var(--fence);border-radius:6px;margin:-3px;
+  position:relative;min-width:0;min-height:0;
+}
+.frame.pv{border-style:dashed;border-color:#fff;background:rgba(255,255,255,.18)}
+/* Sildid on absoluutselt paigutatud, et need ei muudaks ruutude suurust. */
+.badge{
+  position:absolute;z-index:3;transform:translate(-50%,-50%);
+  background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:10px;
+  padding:0 7px;font-weight:700;font-size:18px;white-space:nowrap;box-shadow:0 2px 0 var(--ink)
+}
+.badge.top{left:50%;top:0}
+.badge.left{left:0;top:50%}
+.badge.mid{left:50%;top:50%;font-size:22px}
+.badge.q{background:var(--gold)}
+.board.shake{animation:shake .35s}
+.hint{text-align:center;color:var(--muted);font-size:16px;margin-top:-4px;min-height:20px}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.answers.three{grid-template-columns:repeat(3,1fr)}
+.answers.one{grid-template-columns:1fr}
+.ans{font-size:28px;padding:8px;min-height:62px}
+.ans.ok{background:var(--good)}
+.ans.no{background:var(--bad);color:#fff;animation:shake .35s}
+.ans.show{background:var(--good);animation:bump .4s}
+.msg{min-height:30px;text-align:center;font-size:19px;font-weight:700;color:var(--gold);line-height:1.35}
+.msg.badmsg{color:#ffd0d6}
+
+/* ---------- lõpuekraan ---------- */
+.end-title{text-align:center;font-size:38px;margin:28px 0 0;color:var(--gold);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ink)}
+.big-score{text-align:center;font-size:72px;font-weight:700;line-height:1;margin:6px 0 0}
+.center{text-align:center;margin:0}
+.missed{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.missed span{background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;padding:4px 10px;font-weight:700;font-size:17px;box-shadow:0 3px 0 var(--ink)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes bump{50%{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== ALGUS ===== -->
+  <section class="screen" id="start">
+    <a class="back" href="../index.html">← Kõik ülesanded</a>
+    <div class="logo-blocks" aria-hidden="true" id="logo"></div>
+    <h1 class="logo">Ehitaja</h1>
+    <p class="sub">Ehita aedu ja mõõda neid!</p>
+
+    <div class="card">
+      <ul class="howto">
+        <li><b>Pindala</b> näitab, mitu ruutu on aia sees. Ristkülikul: pikkus · laius.</li>
+        <li><b>Ümbermõõt</b> näitab, kui pikk on aed ümberringi. Liida kõik küljed kokku.</li>
+        <li>Ehitamisülesandes vea sõrme või hiirega üle ruutude.</li>
+        <li>Mängus on 10 ülesannet.</li>
+      </ul>
+    </div>
+
+    <p class="best" id="bestStart"></p>
+    <button class="btn play" id="playBtn">Mängi! ▶</button>
+  </section>
+
+  <!-- ===== MÄNG ===== -->
+  <section class="screen hidden" id="game">
+    <header class="hud">
+      <a class="icon-btn" href="../index.html" aria-label="Tagasi ülesannete juurde">←</a>
+      <div class="stat"><span class="lbl">Ülesanne</span><span class="val" id="roundVal">1/10</span></div>
+      <div class="stat"><span class="lbl">Õigeid</span><span class="val" id="okVal">0</span></div>
+      <button class="icon-btn" id="soundBtn" aria-label="Heli">🔊</button>
+    </header>
+
+    <div class="task" id="task"></div>
+    <div class="board" id="board"></div>
+    <div class="hint" id="hint"></div>
+    <div class="answers" id="answers"></div>
+    <div class="msg" id="msg"></div>
+
+    <button class="link-btn" id="quitBtn">Lõpeta mäng</button>
+  </section>
+
+  <!-- ===== LÕPP ===== -->
+  <section class="screen hidden" id="end">
+    <h1 class="end-title" id="endTitle">Tubli!</h1>
+    <div class="big-score" id="endScore">0/10</div>
+    <p class="center">õiget vastust</p>
+    <p class="center" id="endRecord"></p>
+    <div class="card">
+      <h2 id="missedTitle">Harjuta neid veel:</h2>
+      <div class="missed" id="missed"></div>
+    </div>
+    <button class="btn play" id="againBtn">Mängi uuesti ↻</button>
+    <a class="back" href="../index.html" style="text-align:center">← Kõik ülesanded</a>
+  </section>
+
+</div>
+
+<script src="../seaded.js"></script>
+<script>
+(() => {
+  const COLS = 10, ROWS = 8;
+  // Ülesannete järjekord: algul lihtsam, lõpus raskem.
+  const PLAN = ['pind', 'umber', 'ehitaA', 'puuduv', 'pindS', 'umberS', 'ehitaP', 'L', 'vordle', 'ehitaAP'];
+  const ROUNDS = PLAN.length;
+  const COLORS = ['#3ddc84', '#2ec4ff', '#ffb020', '#ff7ad9', '#8b5cff'];
+  const PRAISE = ['Õige!', 'Super!', 'Tubli!', 'Äge!', 'Vau!', 'Täpselt!', 'Nii see on!'];
+
+  const $ = id => document.getElementById(id);
+  const rand = n => Math.floor(Math.random() * n);
+  const randIn = (a, b) => a + rand(b - a + 1);
+  const pick = a => a[rand(a.length)];
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const S = { sound: store.get('eh-sound', true) };
+
+  /* ---------- heli ---------- */
+  let AC = null;
+  function tone(f, d = .12, type = 'square', v = .05, delay = 0) {
+    if (!S.sound) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02);
+    } catch (e) {}
+  }
+  const SFX = {
+    good: () => { tone(660); tone(880, .16, 'square', .05, .08); },
+    bad: () => tone(170, .28, 'sawtooth', .04),
+    place: () => tone(260, .07, 'triangle', .09)
+  };
+
+  /* ---------- abifunktsioonid ---------- */
+  const area = s => s.w * s.h;
+  const per = s => 2 * (s.w + s.h);
+  // Paigutab w×h ristküliku laua keskele.
+  const center = (w, h) => ({ w, h, r: Math.floor((ROWS - h) / 2), c: Math.floor((COLS - w) / 2) });
+  function numOptions(ans, cands) {
+    const set = new Set();
+    shuffle(cands).forEach(v => { if (v > 0 && Number.isInteger(v) && v !== ans && set.size < 3) set.add(v); });
+    let j = 1;
+    while (set.size < 3) { if (!set.has(ans + j)) set.add(ans + j); j++; }
+    return shuffle([ans, ...set]).map(v => ({ html: String(v), val: String(v) }));
+  }
+  // Kõik ristkülikud, mis mahuvad lauale ja vastavad tingimusele.
+  function rects(test) {
+    const out = [];
+    for (let h = 1; h <= ROWS; h++) for (let w = 1; w <= COLS; w++) if (test({ w, h })) out.push({ w, h });
+    return out;
+  }
+
+  /* ---------- ülesannete loomine ---------- */
+  const GEN = {
+    pind: () => askArea(randIn(2, 5), randIn(2, 4), false),
+    pindS: () => askArea(randIn(5, 9), randIn(3, 6), true),
+    umber: () => askPer(randIn(2, 5), randIn(2, 4), false),
+    umberS: () => askPer(randIn(4, 9), randIn(3, 6), true),
+    puuduv: () => {
+      const w = randIn(3, 8), h = randIn(2, 6), A = w * h, s = center(w, h);
+      s.labels = { top: w, left: '?' }; s.solid = true;
+      return {
+        kind: 'choice',
+        task: `Aia pindala on <b>${A}</b> ruutu. Üks külg on ${w}. Kui pikk on teine külg?`,
+        shapes: [s],
+        options: numOptions(h, [A - w, w, h + 1, h - 1, A / 2, h + 2]),
+        ans: String(h),
+        fact: `${A} : ${w} = ${h}`,
+        why: `Pindala = külg · külg, seega ${A} : ${w} = ${h}.`
+      };
+    },
+    L: () => {
+      // suur ristkülik, millest on üks nurk välja lõigatud
+      const w = randIn(4, 7), h = randIn(3, 6), a = randIn(1, w - 2), b = randIn(1, h - 2);
+      const r0 = Math.floor((ROWS - h) / 2), c0 = Math.floor((COLS - w) / 2);
+      const corner = rand(4), cells = new Set();
+      for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+        const inR = corner < 2 ? r < b : r >= h - b, inC = corner % 2 === 0 ? c < a : c >= w - a;
+        if (!(inR && inC)) cells.add((r0 + r) * COLS + c0 + c);
+      }
+      const A = w * h - a * b;
+      return {
+        kind: 'choice',
+        task: 'Mis on selle aia <b>pindala</b>?',
+        cellSets: [cells],
+        options: numOptions(A, [w * h, A + a, A - b, A + 1, A - 1, a * b + A + 2]),
+        ans: String(A),
+        fact: `L-kujund ${w}·${h} − ${a}·${b} = ${A}`,
+        why: `Terve ristkülik oleks ${w} · ${h} = ${w * h}. Ära on lõigatud ${a} · ${b} = ${a * b}. ${w * h} − ${a * b} = ${A}.`
+      };
+    },
+    vordle: () => {
+      // Võrreldakse kas pindala või ümbermõõtu; vahel on need võrdsed.
+      const byArea = Math.random() < .5, f = byArea ? area : per, eq = Math.random() < .3;
+      let A, B, tries = 0;
+      do {
+        A = { w: randIn(1, 5), h: randIn(1, 6) }; B = { w: randIn(1, 9 - A.w - 1), h: randIn(1, 6) };
+        tries++;
+      } while (tries < 500 && ((A.w === B.w && A.h === B.h) || (A.w === B.h && A.h === B.w) || (f(A) === f(B)) !== eq));
+      A.r = Math.floor((ROWS - A.h) / 2); A.c = Math.max(0, Math.floor((COLS - A.w - B.w - 1) / 2));
+      B.r = Math.floor((ROWS - B.h) / 2); B.c = A.c + A.w + 1;
+      A.labels = { mid: 'A' }; B.labels = { mid: 'B' }; B.color = COLORS[1];
+      const what = byArea ? 'pindala' : 'ümbermõõt';
+      const ans = f(A) > f(B) ? 'A' : f(A) < f(B) ? 'B' : '=';
+      const val = s => byArea ? `${s.w} · ${s.h} = ${area(s)}` : `${s.w} + ${s.h} + ${s.w} + ${s.h} = ${per(s)}`;
+      return {
+        kind: 'choice', three: true,
+        task: `Kummal aial on suurem <b>${what}</b>?`,
+        shapes: [A, B],
+        options: [{ html: 'A', val: 'A' }, { html: 'Võrdsed', val: '=' }, { html: 'B', val: 'B' }],
+        ans,
+        fact: `${what}: A ${val(A).split('= ')[1]}, B ${val(B).split('= ')[1]}`,
+        why: `A: ${val(A)}. B: ${val(B)}.`
+      };
+    },
+    ehitaA: () => {
+      const A = pick([6, 8, 9, 10, 12, 14, 15, 16, 18, 20]);
+      return makeBuild(`Ehita aed, mille <b>pindala</b> on <b>${A}</b> ruutu.`, s => area(s) === A,
+        s => `Sinu aia pindala on ${s.w} · ${s.h} = ${area(s)}, vaja oli ${A}.`, `pindala ${A}`);
+    },
+    ehitaP: () => {
+      const P = pick([8, 10, 12, 14, 16, 18, 20]);
+      return makeBuild(`Ehita aed, mille <b>ümbermõõt</b> on <b>${P}</b>.`, s => per(s) === P,
+        s => `Sinu aia ümbermõõt on ${s.w} + ${s.h} + ${s.w} + ${s.h} = ${per(s)}, vaja oli ${P}.`, `ümbermõõt ${P}`);
+    },
+    ehitaAP: () => {
+      const w = randIn(2, 6), h = randIn(2, 5), A = w * h, P = 2 * (w + h);
+      return makeBuild(`Ehita aed, mille <b>pindala</b> on <b>${A}</b> ja <b>ümbermõõt</b> on <b>${P}</b>.`,
+        s => area(s) === A && per(s) === P,
+        s => `Sinu aia pindala on ${area(s)} ja ümbermõõt ${per(s)}. Vaja oli ${A} ja ${P}.`, `pindala ${A}, ümbermõõt ${P}`);
+    }
+  };
+  function askArea(w, h, labels) {
+    const s = center(w, h), A = w * h;
+    if (labels) { s.labels = { top: w, left: h }; s.solid = true; }
+    return {
+      kind: 'choice',
+      task: labels ? 'Mis on aia <b>pindala</b>? Küljed on märgitud.' : 'Mitu ruutu on aia sees? See on aia <b>pindala</b>.',
+      shapes: [s],
+      options: numOptions(A, [2 * (w + h), A + w, A - h, w + h, A + 1, A - 1]),
+      ans: String(A),
+      fact: `pindala ${w} · ${h} = ${A}`,
+      why: `Pindala = ${w} · ${h} = ${A} ruutu.`
+    };
+  }
+  function askPer(w, h, labels) {
+    const s = center(w, h), P = 2 * (w + h);
+    if (labels) { s.labels = { top: w, left: h }; s.solid = true; }
+    return {
+      kind: 'choice',
+      task: 'Kui pikk on aed ümberringi? See on <b>ümbermõõt</b>.',
+      shapes: [s],
+      options: numOptions(P, [w * h, w + h, P + 2, P - 2, P + 1, w * 4]),
+      ans: String(P),
+      fact: `ümbermõõt ${w}+${h}+${w}+${h} = ${P}`,
+      why: `Ümbermõõt = ${w} + ${h} + ${w} + ${h} = ${P}.`
+    };
+  }
+  function makeBuild(task, test, whyFor, fact) {
+    const sols = rects(test);
+    return { kind: 'build', task, test, whyFor, fact: 'ehita: ' + fact, example: pick(sols.filter(s => s.w >= s.h).length ? sols.filter(s => s.w >= s.h) : sols), shapes: [] };
+  }
+
+  /* ---------- laud ---------- */
+  const boardEl = $('board');
+  const cells = [];
+  boardEl.style.gridTemplateColumns = `repeat(${COLS}, minmax(0, 1fr))`;
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const d = document.createElement('div');
+    d.className = 'cell'; d.style.gridRow = r + 1; d.style.gridColumn = c + 1;
+    boardEl.appendChild(d); cells.push(d);
+  }
+  function frameEl(s, cls) {
+    const f = document.createElement('div');
+    f.className = 'frame' + (cls ? ' ' + cls : '');
+    f.style.gridRow = `${s.r + 1} / span ${s.h}`;
+    f.style.gridColumn = `${s.c + 1} / span ${s.w}`;
+    return f;
+  }
+  function badge(text, pos) {
+    const b = document.createElement('span');
+    b.className = 'badge ' + pos + (text === '?' ? ' q' : '');
+    b.textContent = text;
+    return b;
+  }
+  function render() {
+    const q = S.q;
+    boardEl.querySelectorAll('.frame').forEach(f => f.remove());
+    const fill = Array(COLS * ROWS).fill(null);
+    const shapes = [...(q.shapes || [])];
+    if (S.built) shapes.push(S.built);
+    shapes.forEach(s => {
+      if (s.solid) return; // ühtlane täide: ruute ei saa lugeda, tuleb arvutada
+      for (let r = s.r; r < s.r + s.h; r++) for (let c = s.c; c < s.c + s.w; c++) fill[r * COLS + c] = s.color || COLORS[0];
+    });
+    (q.cellSets || []).forEach(set => set.forEach(i => { fill[i] = COLORS[2]; }));
+    cells.forEach((d, i) => {
+      d.className = 'cell' + (fill[i] ? ' f' : '');
+      d.style.setProperty('--c', fill[i] || 'transparent');
+    });
+    shapes.forEach(s => {
+      const f = frameEl(s);
+      if (s.solid) f.style.background = s.color || COLORS[0];
+      const L = s.labels || {};
+      if (L.top !== undefined) f.appendChild(badge(L.top, 'top'));
+      if (L.left !== undefined) f.appendChild(badge(L.left, 'left'));
+      if (L.mid !== undefined) f.appendChild(badge(L.mid, 'mid'));
+      boardEl.appendChild(f);
+    });
+    if (S.drag) {
+      const p = rectOf(S.drag.a, S.drag.b), f = frameEl(p, 'pv');
+      f.appendChild(badge(`${p.w} × ${p.h}`, 'mid'));
+      boardEl.appendChild(f);
+    }
+    boardEl.classList.toggle('build', q.kind === 'build' && !S.locked);
+  }
+  function rectOf(a, b) {
+    const r1 = Math.floor(a / COLS), c1 = a % COLS, r2 = Math.floor(b / COLS), c2 = b % COLS;
+    return { r: Math.min(r1, r2), c: Math.min(c1, c2), h: Math.abs(r1 - r2) + 1, w: Math.abs(c1 - c2) + 1 };
+  }
+
+  /* ---------- ehitamine (tõmbamine) ---------- */
+  function cellAt(e, strict) {
+    const a = cells[0].getBoundingClientRect(), z = cells[cells.length - 1].getBoundingClientRect();
+    const sx = (z.left - a.left) / (COLS - 1), sy = (z.top - a.top) / (ROWS - 1);
+    const gx = (sx - a.width) / 2, gy = (sy - a.height) / 2;
+    let c = Math.floor((e.clientX - a.left + gx) / sx), r = Math.floor((e.clientY - a.top + gy) / sy);
+    if (strict && (c < 0 || c >= COLS || r < 0 || r >= ROWS)) return -1;
+    c = Math.max(0, Math.min(COLS - 1, c)); r = Math.max(0, Math.min(ROWS - 1, r));
+    return r * COLS + c;
+  }
+  boardEl.addEventListener('pointerdown', e => {
+    if (!S.q || S.q.kind !== 'build' || S.locked || S.drag) return;
+    const i = cellAt(e, true); if (i < 0) return;
+    e.preventDefault();
+    S.drag = { a: i, b: i };
+    render();
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    if (!S.drag) return;
+    const i = cellAt(e, false);
+    if (i !== S.drag.b) { S.drag.b = i; render(); }
+  }
+  function unlisten() {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+  }
+  function onUp() {
+    unlisten();
+    if (!S.drag) return;
+    const p = rectOf(S.drag.a, S.drag.b);
+    S.drag = null;
+    S.built = p;
+    SFX.place();
+    setMsg('');
+    $('hint').textContent = `Sinu aed: ${p.w} × ${p.h}. Vea uuesti, kui tahad muuta.`;
+    render();
+  }
+  function onCancel() { unlisten(); S.drag = null; render(); }
+
+  /* ---------- ekraanid ---------- */
+  function show(id) { ['start', 'game', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); }
+  $('logo').innerHTML = Array.from({ length: 15 }, (_, i) => `<div class="blk" style="--c:${i % 5 === 4 ? '#2ec4ff' : '#3ddc84'}"></div>`).join('');
+  function syncStart() {
+    const best = store.get('eh-best', null);
+    $('bestStart').textContent = best !== null ? `🏆 Parim tulemus: ${best}/${ROUNDS}` : '';
+  }
+  syncStart();
+
+  /* ---------- mäng ---------- */
+  function updateHud() {
+    $('roundVal').textContent = `${Math.min(S.round + 1, ROUNDS)}/${ROUNDS}`;
+    $('okVal').textContent = S.correct;
+    $('soundBtn').textContent = S.sound ? '🔊' : '🔇';
+  }
+  function setMsg(t, bad) { const m = $('msg'); m.innerHTML = t || ''; m.classList.toggle('badmsg', !!bad); }
+  function newQuestion() {
+    const q = S.q = GEN[PLAN[S.round]]();
+    S.locked = false; S.built = null; S.drag = null;
+    $('task').innerHTML = q.task;
+    $('hint').textContent = q.kind === 'build' ? 'Vea sõrme või hiirega üle ruutude.' : '';
+    setMsg('');
+    render();
+    const ans = $('answers'); ans.innerHTML = '';
+    ans.className = 'answers' + (q.three ? ' three' : q.kind === 'build' ? ' one' : '');
+    if (q.kind === 'build') {
+      const b = document.createElement('button');
+      b.className = 'btn ans'; b.textContent = 'Valmis ✓';
+      b.onclick = () => checkBuild(b);
+      ans.appendChild(b);
+    } else {
+      q.options.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'btn ans'; b.innerHTML = o.html; b.dataset.v = o.val;
+        if (q.three) b.style.fontSize = '22px';
+        b.onclick = () => answer(b, o.val);
+        ans.appendChild(b);
+      });
+    }
+    updateHud();
+  }
+  function checkBuild(btn) {
+    if (S.locked) return;
+    const q = S.q, s = S.built;
+    if (!s) { setMsg('Ehita enne aed – vea üle ruutude!', true); return; }
+    S.locked = true;
+    const ok = q.test(s);
+    if (ok) {
+      btn.classList.add('ok');
+      setMsg(`${pick(PRAISE)} Pindala ${area(s)}, ümbermõõt ${per(s)}.`);
+    } else {
+      btn.classList.add('no');
+      boardEl.classList.remove('shake'); void boardEl.offsetWidth; boardEl.classList.add('shake');
+      const ex = q.example;
+      setMsg(`${q.whyFor(s)} Näiteks sobib ${ex.w} × ${ex.h}.`, true);
+      setTimeout(() => { S.built = Object.assign(center(ex.w, ex.h), { color: COLORS[1], labels: { top: ex.w, left: ex.h } }); render(); }, 700);
+    }
+    $('hint').textContent = '';
+    render();
+    finish(ok);
+  }
+  function answer(btn, v) {
+    if (S.locked) return;
+    S.locked = true;
+    const q = S.q, ok = v === q.ans;
+    btn.classList.add(ok ? 'ok' : 'no');
+    if (!ok) document.querySelectorAll('.ans').forEach(b => { if (b.dataset.v === q.ans) b.classList.add('show'); });
+    setMsg(ok ? `${pick(PRAISE)} ${q.why}` : q.why, !ok);
+    finish(ok);
+  }
+  function finish(ok) {
+    S.asked++;
+    if (ok) {
+      S.correct++; SFX.good();
+      const el = $('okVal'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    } else {
+      SFX.bad(); S.missed.push(S.q.fact);
+    }
+    updateHud();
+    S.timer = setTimeout(() => {
+      S.round++;
+      if (S.round >= ROUNDS) endGame(true); else newQuestion();
+    }, ok ? 2000 : 4200);
+  }
+
+  function startGame() {
+    clearTimeout(S.timer);
+    Object.assign(S, { round: 0, asked: 0, correct: 0, missed: [], sent: false, startedAt: Date.now(), q: null });
+    show('game');
+    newQuestion();
+  }
+  function endGame(full) {
+    clearTimeout(S.timer);
+    if (S.drag) onCancel();
+    const best = store.get('eh-best', null);
+    const rec = full && (best === null || S.correct > best);
+    if (rec) store.set('eh-best', S.correct);
+    $('endTitle').textContent = full ? (S.correct >= 8 ? 'Super!' : 'Tubli!') : 'Mäng läbi!';
+    $('endScore').textContent = `${S.correct}/${S.asked}`;
+    $('endRecord').textContent = rec ? '🏆 Uus rekord!' : (best !== null ? `Parim: ${best}/${ROUNDS}` : '');
+    const ms = $('missed'); ms.innerHTML = '';
+    $('missedTitle').textContent = S.missed.length ? 'Harjuta neid veel:' : (S.asked ? 'Ühtegi viga! 🌟' : 'Ühtegi ülesannet ei lahendatud.');
+    S.missed.forEach(f => { const s = document.createElement('span'); s.textContent = f; ms.appendChild(s); });
+    report(full ? 'kõik ülesanded tehtud' : 'lõpetas ise');
+    show('end');
+  }
+
+  /* ---------- tulemuse saatmine vanemale ---------- */
+  function report(kuidas) {
+    if (S.sent || !S.asked || !window.saadaTulemus) return;
+    S.sent = true;
+    const mins = Math.max(1, Math.round((Date.now() - S.startedAt) / 60000));
+    const tekst = [
+      `Õigeid: ${S.correct}/${S.asked} (${Math.round(100 * S.correct / S.asked)}%)`,
+      `Ülesandeid: ${S.asked}/${ROUNDS} · aeg ~${mins} min · ${kuidas}`,
+      S.missed.length ? `Vead: ${S.missed.join('; ')}` : 'Vigu polnud 🌟'
+    ].join('\n');
+    window.saadaTulemus('Ehitaja tehtud', tekst);
+  }
+  // Kui laps paneb lehe kinni kesk mängu, saadetakse ikkagi seni tehtu.
+  window.addEventListener('pagehide', () => { if (!$('game').classList.contains('hidden')) report('jäi pooleli'); });
+
+  $('playBtn').onclick = () => { tone(1, .01); startGame(); };
+  $('againBtn').onclick = startGame;
+  $('quitBtn').onclick = () => endGame(false);
+  $('soundBtn').onclick = () => { S.sound = !S.sound; store.set('eh-sound', S.sound); updateHud(); };
+})();
+</script>
+</body>
+</html>

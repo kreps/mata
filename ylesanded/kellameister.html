@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="et">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kellameister</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#24166a; --bg2:#4b1f93;
+  --ink:#170d33;
+  --text:#ffffff;
+  --muted:#cbbff7;
+  --good:#3ddc84; --bad:#ff5a6e; --gold:#ffd23f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:'Fredoka',system-ui,sans-serif;color:var(--text);
+  background:
+    radial-gradient(circle at 15% -5%, #7a3cf0 0%, transparent 45%),
+    radial-gradient(circle at 110% 90%, #e2408f55 0%, transparent 40%),
+    linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  overflow-x:hidden;user-select:none;-webkit-user-select:none;
+}
+.wrap{max-width:460px;margin:0 auto;padding:12px 16px 28px;min-height:100vh;display:flex;flex-direction:column}
+.hidden{display:none!important}
+.screen{display:flex;flex-direction:column;gap:14px;flex:1}
+
+/* ---------- ühised nupud ---------- */
+.btn{
+  font:inherit;font-weight:700;font-size:22px;color:var(--ink);
+  background:#fff;border:3px solid var(--ink);border-radius:16px;padding:12px;
+  box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.play{background:var(--good);font-size:30px;padding:16px}
+.icon-btn{
+  width:44px;height:44px;flex:none;display:grid;place-items:center;padding:0;
+  font:inherit;font-size:22px;font-weight:700;color:var(--ink);text-decoration:none;
+  background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:0 4px 0 var(--ink);cursor:pointer;
+}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.link-btn{background:none;border:0;color:var(--muted);font:inherit;font-size:16px;text-decoration:underline;cursor:pointer;align-self:center;padding:6px}
+a.back{color:var(--muted);text-decoration:none;font-size:16px}
+
+/* ---------- algusekraan ---------- */
+.logo-clock{display:flex;justify-content:center;margin-top:18px}
+h1.logo{
+  margin:6px 0 0;text-align:center;font-size:44px;line-height:1;color:var(--gold);
+  -webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+  text-shadow:0 5px 0 var(--ink);
+}
+.sub{text-align:center;color:var(--muted);margin:0;font-size:17px}
+.card{background:rgba(255,255,255,.08);border:3px solid rgba(0,0,0,.35);border-radius:20px;padding:14px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.card h2{margin:0 0 10px;font-size:18px;color:var(--muted);font-weight:600}
+.howto{font-size:15px;color:var(--muted);line-height:1.45;margin:0;padding-left:20px}
+.howto b{color:#fff}
+.best{text-align:center;color:var(--gold);font-weight:600}
+
+/* ---------- mänguekraan ---------- */
+.hud{display:flex;align-items:center;gap:8px}
+.stat{flex:1;min-width:0;text-align:center;background:rgba(0,0,0,.25);border:2px solid rgba(0,0,0,.3);border-radius:12px;padding:3px 6px}
+.stat .lbl{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.stat .val{font-size:21px;font-weight:700;display:inline-block}
+.stat .val.bump{animation:bump .3s}
+
+.task{
+  text-align:center;font-size:21px;font-weight:700;color:var(--ink);background:#fff;
+  border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:8px 12px;line-height:1.3;
+}
+.task b{color:#8b5cff}
+.task .big{display:block;font-size:34px;color:#8b5cff;margin-top:2px}
+
+.stage{display:flex;justify-content:center;align-items:center;min-height:60px}
+.stage.shake{animation:shake .35s}
+svg.clock{display:block;max-width:100%;height:auto;filter:drop-shadow(0 6px 0 rgba(0,0,0,.35))}
+svg.clock .hand{transition:transform .25s ease-out}
+.daypart{font-size:44px;margin-right:6px}
+
+.setters{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.setters .btn{font-size:17px;padding:8px 2px;background:#8f7cf0;color:#fff}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.answers.one{grid-template-columns:1fr}
+.ans{font-size:26px;padding:8px;min-height:62px;line-height:1.1}
+.ans.small{font-size:19px}
+.ans.ok{background:var(--good)}
+.ans.no{background:var(--bad);color:#fff;animation:shake .35s}
+.ans.show{background:var(--good);animation:bump .4s}
+.msg{min-height:30px;text-align:center;font-size:19px;font-weight:700;color:var(--gold);line-height:1.35}
+.msg.badmsg{color:#ffd0d6}
+
+/* ---------- lõpuekraan ---------- */
+.end-title{text-align:center;font-size:38px;margin:28px 0 0;color:var(--gold);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ink)}
+.big-score{text-align:center;font-size:72px;font-weight:700;line-height:1;margin:6px 0 0}
+.center{text-align:center;margin:0}
+.missed{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.missed span{background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;padding:4px 10px;font-weight:700;font-size:17px;box-shadow:0 3px 0 var(--ink)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes bump{50%{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== ALGUS ===== -->
+  <section class="screen" id="start">
+    <a class="back" href="../index.html">← Kõik ülesanded</a>
+    <div class="logo-clock" id="logoClock" aria-hidden="true"></div>
+    <h1 class="logo">Kellameister</h1>
+    <p class="sub">Loe kella, sea kella ja arvuta aega!</p>
+
+    <div class="card">
+      <ul class="howto">
+        <li><b>Lühike osuti</b> näitab tunde, <b>pikk osuti</b> minuteid.</li>
+        <li><b>Veerand neli</b> on 3:15, <b>pool neli</b> on 3:30, <b>kolmveerand neli</b> on 3:45.</li>
+        <li>1 tund = 60 minutit, 1 minut = 60 sekundit, 1 ööpäev = 24 tundi.</li>
+        <li>Mängus on 10 ülesannet.</li>
+      </ul>
+    </div>
+
+    <p class="best" id="bestStart"></p>
+    <button class="btn play" id="playBtn">Mängi! ▶</button>
+  </section>
+
+  <!-- ===== MÄNG ===== -->
+  <section class="screen hidden" id="game">
+    <header class="hud">
+      <a class="icon-btn" href="../index.html" aria-label="Tagasi ülesannete juurde">←</a>
+      <div class="stat"><span class="lbl">Ülesanne</span><span class="val" id="roundVal">1/10</span></div>
+      <div class="stat"><span class="lbl">Õigeid</span><span class="val" id="okVal">0</span></div>
+      <button class="icon-btn" id="soundBtn" aria-label="Heli">🔊</button>
+    </header>
+
+    <div class="task" id="task"></div>
+    <div class="stage" id="stage"></div>
+    <div class="setters hidden" id="setters">
+      <button class="btn" data-d="-60">−1 h</button>
+      <button class="btn" data-d="-5">−5 min</button>
+      <button class="btn" data-d="5">+5 min</button>
+      <button class="btn" data-d="60">+1 h</button>
+    </div>
+    <div class="answers" id="answers"></div>
+    <div class="msg" id="msg"></div>
+
+    <button class="link-btn" id="quitBtn">Lõpeta mäng</button>
+  </section>
+
+  <!-- ===== LÕPP ===== -->
+  <section class="screen hidden" id="end">
+    <h1 class="end-title" id="endTitle">Tubli!</h1>
+    <div class="big-score" id="endScore">0/10</div>
+    <p class="center">õiget vastust</p>
+    <p class="center" id="endRecord"></p>
+    <div class="card">
+      <h2 id="missedTitle">Harjuta neid veel:</h2>
+      <div class="missed" id="missed"></div>
+    </div>
+    <button class="btn play" id="againBtn">Mängi uuesti ↻</button>
+    <a class="back" href="../index.html" style="text-align:center">← Kõik ülesanded</a>
+  </section>
+
+</div>
+
+<script src="../seaded.js"></script>
+<script>
+(() => {
+  // Ülesannete järjekord: algul lihtsam, lõpus raskem.
+  const PLAN = ['loeT', 'sona', 'loeV', 'sea', 'yhik1', 'loe5', 'kestus', 'kell24', 'vahe', 'yhik2'];
+  const ROUNDS = PLAN.length;
+  const PRAISE = ['Õige!', 'Super!', 'Tubli!', 'Äge!', 'Vau!', 'Täpselt!', 'Nii see on!'];
+  const NUM = ['kaksteist', 'üks', 'kaks', 'kolm', 'neli', 'viis', 'kuus', 'seitse', 'kaheksa', 'üheksa', 'kümme', 'üksteist', 'kaksteist'];
+  const NAMES = ['Mia', 'Kaspar', 'Liisa', 'Oskar', 'Emma', 'Robin', 'Mari', 'Karl'];
+
+  const $ = id => document.getElementById(id);
+  const rand = n => Math.floor(Math.random() * n);
+  const randIn = (a, b) => a + rand(b - a + 1);
+  const pick = a => a[rand(a.length)];
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const S = { sound: store.get('km-sound', true) };
+
+  /* ---------- heli ---------- */
+  let AC = null;
+  function tone(f, d = .12, type = 'square', v = .05, delay = 0) {
+    if (!S.sound) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02);
+    } catch (e) {}
+  }
+  const SFX = {
+    good: () => { tone(660); tone(880, .16, 'square', .05, .08); },
+    bad: () => tone(170, .28, 'sawtooth', .04),
+    tick: () => tone(1200, .03, 'square', .03)
+  };
+
+  /* ---------- aeg ---------- */
+  // Aeg on minutites alates keskööst. 12-tunnise kella jaoks võetakse jääk 720-ga.
+  const pad = n => String(n).padStart(2, '0');
+  const h12 = t => Math.floor(((t % 720) + 720) % 720 / 60) || 12;
+  const mm = t => ((t % 60) + 60) % 60;
+  const d12 = t => `${h12(t)}:${pad(mm(t))}`;
+  const d24 = t => { const x = ((t % 1440) + 1440) % 1440; return `${pad(Math.floor(x / 60))}:${pad(x % 60)}`; };
+  const dur = m => m >= 60 ? (m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`) : `${m} min`;
+  // Eesti kellaaja väljend: veerand neli = 3:15, pool neli = 3:30, kolmveerand neli = 3:45.
+  function phrase(t) {
+    const h = h12(t), m = mm(t), next = NUM[h % 12 + 1];
+    if (m === 0) return `kell ${NUM[h]}`;
+    if (m === 15) return `veerand ${next}`;
+    if (m === 30) return `pool ${next}`;
+    if (m === 45) return `kolmveerand ${next}`;
+    return d12(t);
+  }
+
+  /* ---------- kell ---------- */
+  function clockSVG(t, size = 210) {
+    const cx = 110, cy = 110;
+    let s = `<svg class="clock" viewBox="0 0 220 220" width="${size}" height="${size}" role="img" aria-label="Kell">`;
+    s += `<circle cx="${cx}" cy="${cy}" r="104" fill="#ffd23f" stroke="#170d33" stroke-width="5"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="92" fill="#fff" stroke="#170d33" stroke-width="3"/>`;
+    for (let i = 0; i < 60; i++) {
+      const a = i * 6 * Math.PI / 180, big = i % 5 === 0, r1 = big ? 80 : 85;
+      s += `<line x1="${(cx + r1 * Math.sin(a)).toFixed(1)}" y1="${(cy - r1 * Math.cos(a)).toFixed(1)}" x2="${(cx + 89 * Math.sin(a)).toFixed(1)}" y2="${(cy - 89 * Math.cos(a)).toFixed(1)}" stroke="#170d33" stroke-width="${big ? 3 : 1.3}" stroke-linecap="round"/>`;
+    }
+    for (let n = 1; n <= 12; n++) {
+      const a = n * 30 * Math.PI / 180;
+      s += `<text x="${(cx + 66 * Math.sin(a)).toFixed(1)}" y="${(cy - 66 * Math.cos(a) + 7).toFixed(1)}" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="20" fill="#170d33">${n}</text>`;
+    }
+    const ha = ((t % 720) + 720) % 720 / 2, ma = mm(t) * 6;
+    s += `<g class="hand" style="transform-origin:110px 110px;transform:rotate(${ha}deg)"><line x1="${cx}" y1="${cy + 10}" x2="${cx}" y2="${cy - 48}" stroke="#170d33" stroke-width="9" stroke-linecap="round"/></g>`;
+    s += `<g class="hand" style="transform-origin:110px 110px;transform:rotate(${ma}deg)"><line x1="${cx}" y1="${cy + 14}" x2="${cx}" y2="${cy - 78}" stroke="#8b5cff" stroke-width="5" stroke-linecap="round"/></g>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="7" fill="#ff5a6e" stroke="#170d33" stroke-width="2.5"/>`;
+    return s + '</svg>';
+  }
+
+  /* ---------- vastusevariandid ---------- */
+  function strOptions(ans, cands) {
+    const set = new Set();
+    shuffle(cands).forEach(v => { if (v && v !== ans && set.size < 3) set.add(v); });
+    return shuffle([ans, ...set]);
+  }
+  // Tüüpvead kella lugemisel: osutid vahetuses, tund vale, minutid valesti.
+  function clockOptions(t, step) {
+    const swapped = (mm(t) / 5 || 12) * 60 + (h12(t) % 12) * 5;
+    const near = mm(t) >= 30 ? t + 60 : t - 60;
+    const c = [swapped, near, t + step, t - step, t + 60, t + 30, t - 30].map(d12);
+    const opts = strOptions(d12(t), c);
+    let k = 1;
+    while (opts.length < 4) { const v = d12(t + k * step * 2); if (!opts.includes(v)) opts.push(v); k++; }
+    return shuffle(opts);
+  }
+  function numOptions(ans, cands, fmt = String) {
+    const set = new Set();
+    shuffle(cands).forEach(v => { if (v > 0 && Number.isInteger(v) && v !== ans && set.size < 3) set.add(v); });
+    let j = 1;
+    while (set.size < 3) { if (!set.has(ans + j * 5)) set.add(ans + j * 5); j++; }
+    return shuffle([ans, ...set]).map(fmt);
+  }
+
+  /* ---------- ülesannete loomine ---------- */
+  const readClock = (minutes, step) => () => {
+    const t = randIn(1, 12) * 60 + pick(minutes);
+    return {
+      kind: 'choice', clock: t,
+      task: 'Mis kell on?',
+      options: clockOptions(t, step), ans: d12(t),
+      fact: `kell ${d12(t)}`,
+      why: `Lühike osuti näitab tunde, pikk minuteid. Kell on ${d12(t)}${mm(t) % 15 === 0 && mm(t) ? ` (${phrase(t)})` : ''}.`
+    };
+  };
+  const GEN = {
+    loeT: readClock([0, 0, 30], 30),
+    loeV: readClock([15, 30, 45], 15),
+    loe5: readClock([5, 10, 20, 25, 35, 40, 50, 55], 5),
+    sona: () => {
+      const t = randIn(1, 12) * 60 + pick([15, 30, 45]);
+      const wrong = [phrase(t - 60), phrase(t + 60), phrase(t + 15), phrase(t - 15), phrase(t + 30)];
+      return {
+        kind: 'choice', clock: t, small: true,
+        task: 'Kuidas seda kellaaega öelda?',
+        options: strOptions(phrase(t), wrong), ans: phrase(t),
+        fact: `${d12(t)} = ${phrase(t)}`,
+        why: `Kell on ${d12(t)}. Eesti keeles öeldakse järgmise tunni järgi: ${phrase(t)}.`
+      };
+    },
+    sea: () => {
+      const t = randIn(1, 12) * 60 + rand(12) * 5;
+      const say = mm(t) % 15 === 0 ? phrase(t) : d12(t);
+      return {
+        kind: 'set', target: t,
+        task: `Keera kell õigeks:<span class="big">${say}</span>`,
+        fact: `sea kell ${d12(t)}`,
+        why: `Õige on ${d12(t)}: lühike osuti ${h12(t)} juures${mm(t) ? ', pikk osuti ' + (mm(t) / 5) + ' juures' : ', pikk osuti 12 juures'}.`
+      };
+    },
+    yhik1: () => unitTask(pick([
+      ['1 tund', 'minutit', 60], ['1 minut', 'sekundit', 60], ['1 ööpäev', 'tundi', 24], ['1 nädal', 'päeva', 7],
+      ['pool tundi', 'minutit', 30], ['veerand tundi', 'minutit', 15], ['1 aasta', 'kuud', 12], ['2 tundi', 'minutit', 120]
+    ])),
+    yhik2: () => {
+      const a = randIn(2, 4), b = pick([10, 15, 20, 30, 45]), s = randIn(2, 5);
+      return unitTask(pick([
+        [`1 h ${b} min`, 'minutit', 60 + b], [`${a} h`, 'minutit', a * 60], [`${s} minutit`, 'sekundit', s * 60],
+        [`${s * 60} sekundit`, 'minutit', s], [`${a} ööpäeva`, 'tundi', a * 24], [`${a} nädalat`, 'päeva', a * 7],
+        [`${60 * a} minutit`, 'tundi', a], [`2 h ${b} min`, 'minutit', 120 + b]
+      ]));
+    },
+    kestus: () => {
+      const start = randIn(8, 19) * 60 + rand(12) * 5, d = pick([15, 20, 25, 30, 35, 40, 45, 50, 75, 90]);
+      const end = start + d, what = pick(['Trenn', 'Film', 'Matk', 'Muusikatund', 'Sünnipäev']);
+      // tüüpviga: minutid liidetakse, aga tund ei muutu
+      const naive = Math.floor(start / 60) * 60 + (mm(start) + d) % 60;
+      return {
+        kind: 'choice', small: true,
+        task: `${what} algab kell <b>${d24(start)}</b> ja kestab <b>${dur(d)}</b>. Mis kell see lõpeb?`,
+        options: strOptions(d24(end), [naive, end + 10, end - 10, end + 60, end - 5, end + 5].map(d24)), ans: d24(end),
+        fact: `${d24(start)} + ${dur(d)} = ${d24(end)}`,
+        why: `${d24(start)} + ${dur(d)} = ${d24(end)}.${mm(start) + d % 60 >= 60 ? ' Kui minuteid saab 60, tuleb juurde üks tund.' : ''}`
+      };
+    },
+    vahe: () => {
+      const start = randIn(8, 18) * 60 + rand(12) * 5, d = pick([25, 35, 40, 45, 50, 55, 65, 70, 80, 85, 95, 100, 110]);
+      const end = start + d, who = pick(NAMES);
+      const naiveDiff = (Math.floor(end / 60) - Math.floor(start / 60)) * 60 + Math.abs(mm(end) - mm(start));
+      return {
+        kind: 'choice', small: true,
+        task: `${who} läks õue kell <b>${d24(start)}</b> ja tuli tuppa kell <b>${d24(end)}</b>. Kui kaua ta õues oli?`,
+        options: numOptions(d, [naiveDiff, d + 10, d - 10, d + 60, d - 5, d + 5], dur), ans: dur(d),
+        fact: `${d24(start)} → ${d24(end)} = ${dur(d)}`,
+        why: `Kellast ${d24(start)} kellani ${d24(end)} on ${dur(d)}.`
+      };
+    },
+    kell24: () => {
+      const part = pick([['pärastlõunal', '☀️', 13, 17], ['õhtul', '🌙', 18, 22], ['hommikul', '🌅', 6, 11]]);
+      const t = randIn(part[2], part[3]) * 60 + pick([0, 15, 30, 45]);
+      const c = [t - 720, t + 60, t - 60, t + 720 - 120, t - 120].map(d24);
+      return {
+        kind: 'choice', clock: t, daypart: part[1],
+        task: `On ${part[0]}. Kuidas see kellaaeg on kirjas <b>24-tunnisel</b> kellal?`,
+        options: strOptions(d24(t), c), ans: d24(t),
+        fact: `${d12(t)} ${part[0]} = ${d24(t)}`,
+        why: t >= 720 ? `Pärast keskpäeva liida tunnile 12: ${h12(t)} + 12 = ${Math.floor(t / 60)}, seega ${d24(t)}.` : `Hommikul jääb kellaaeg samaks: ${d24(t)}.`
+      };
+    }
+  };
+  function unitTask([from, unit, ans]) {
+    return {
+      kind: 'choice',
+      task: `<span class="big">${from} = ? ${unit}</span>`,
+      options: numOptions(ans, [ans === 60 ? 100 : ans * 100 / 60, ans + 10, ans - 10, ans * 2, ans / 2, ans + 40, ans - 40, 100]).map(String),
+      ans: String(ans),
+      fact: `${from} = ${ans} ${unit}`,
+      why: `${from} = ${ans} ${unit}. Pea meeles: 1 h = 60 min, 1 min = 60 s, 1 ööpäev = 24 h, 1 nädal = 7 päeva.`
+    };
+  }
+
+  /* ---------- ekraanid ---------- */
+  function show(id) { ['start', 'game', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); }
+  $('logoClock').innerHTML = clockSVG(10 * 60 + 10, 120);
+  function syncStart() {
+    const best = store.get('km-best', null);
+    $('bestStart').textContent = best !== null ? `🏆 Parim tulemus: ${best}/${ROUNDS}` : '';
+  }
+  syncStart();
+
+  /* ---------- mäng ---------- */
+  function updateHud() {
+    $('roundVal').textContent = `${Math.min(S.round + 1, ROUNDS)}/${ROUNDS}`;
+    $('okVal').textContent = S.correct;
+    $('soundBtn').textContent = S.sound ? '🔊' : '🔇';
+  }
+  function setMsg(t, bad) { const m = $('msg'); m.innerHTML = t || ''; m.classList.toggle('badmsg', !!bad); }
+  function renderStage() {
+    const q = S.q, t = q.kind === 'set' ? S.cur : q.clock;
+    $('stage').innerHTML = t === undefined ? '' : (q.daypart ? `<span class="daypart">${q.daypart}</span>` : '') + clockSVG(t);
+  }
+  function newQuestion() {
+    const q = S.q = GEN[PLAN[S.round]]();
+    S.locked = false;
+    S.rot = 12 * 60; // osutite asend minutites; ei võeta jääki, et osutid ei keerleks tagurpidi
+    S.cur = S.rot;
+    $('task').innerHTML = q.task;
+    setMsg('');
+    renderStage();
+    $('setters').classList.toggle('hidden', q.kind !== 'set');
+    const ans = $('answers'); ans.innerHTML = '';
+    ans.className = 'answers' + (q.kind === 'set' ? ' one' : '');
+    if (q.kind === 'set') {
+      const b = document.createElement('button');
+      b.className = 'btn ans'; b.textContent = 'Valmis ✓';
+      b.onclick = () => checkSet(b);
+      ans.appendChild(b);
+    } else {
+      q.options.forEach(v => {
+        const b = document.createElement('button');
+        b.className = 'btn ans' + (q.small ? ' small' : ''); b.textContent = v; b.dataset.v = v;
+        b.onclick = () => answer(b, v);
+        ans.appendChild(b);
+      });
+    }
+    updateHud();
+  }
+  // Kella keeramise nupud
+  document.querySelectorAll('#setters .btn').forEach(b => b.onclick = () => {
+    if (!S.q || S.q.kind !== 'set' || S.locked) return;
+    S.rot += +b.dataset.d;
+    S.cur = ((S.rot % 720) + 720) % 720;
+    SFX.tick();
+    turnHands(S.rot);
+  });
+  // keerame ainult osuteid, et animatsioon jääks sujuvaks
+  function turnHands(rot) {
+    const hands = $('stage').querySelectorAll('.hand');
+    hands[0].style.transform = `rotate(${rot / 2}deg)`;
+    hands[1].style.transform = `rotate(${rot * 6}deg)`;
+  }
+  function checkSet(btn) {
+    if (S.locked) return;
+    S.locked = true;
+    const q = S.q, ok = (((S.cur - q.target) % 720) + 720) % 720 === 0;
+    if (ok) {
+      btn.classList.add('ok');
+      setMsg(`${pick(PRAISE)} Kell on ${d12(q.target)}.`);
+    } else {
+      btn.classList.add('no');
+      $('stage').classList.remove('shake'); void $('stage').offsetWidth; $('stage').classList.add('shake');
+      setMsg(`Sinu kell näitab ${d12(S.cur)}. ${q.why}`, true);
+      setTimeout(() => turnHands(S.rot + ((((q.target - S.cur) % 720) + 720) % 720)), 800);
+    }
+    finish(ok);
+  }
+  function answer(btn, v) {
+    if (S.locked) return;
+    S.locked = true;
+    const q = S.q, ok = v === q.ans;
+    btn.classList.add(ok ? 'ok' : 'no');
+    if (!ok) document.querySelectorAll('.ans').forEach(b => { if (b.dataset.v === q.ans) b.classList.add('show'); });
+    setMsg(ok ? pick(PRAISE) : q.why, !ok);
+    finish(ok);
+  }
+  function finish(ok) {
+    S.asked++;
+    if (ok) {
+      S.correct++; SFX.good();
+      const el = $('okVal'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    } else {
+      SFX.bad(); S.missed.push(S.q.fact);
+    }
+    updateHud();
+    S.timer = setTimeout(() => {
+      S.round++;
+      if (S.round >= ROUNDS) endGame(true); else newQuestion();
+    }, ok ? 1500 : 4200);
+  }
+
+  function startGame() {
+    clearTimeout(S.timer);
+    Object.assign(S, { round: 0, asked: 0, correct: 0, missed: [], sent: false, startedAt: Date.now(), q: null });
+    show('game');
+    newQuestion();
+  }
+  function endGame(full) {
+    clearTimeout(S.timer);
+    const best = store.get('km-best', null);
+    const rec = full && (best === null || S.correct > best);
+    if (rec) store.set('km-best', S.correct);
+    $('endTitle').textContent = full ? (S.correct >= 8 ? 'Super!' : 'Tubli!') : 'Mäng läbi!';
+    $('endScore').textContent = `${S.correct}/${S.asked}`;
+    $('endRecord').textContent = rec ? '🏆 Uus rekord!' : (best !== null ? `Parim: ${best}/${ROUNDS}` : '');
+    const ms = $('missed'); ms.innerHTML = '';
+    $('missedTitle').textContent = S.missed.length ? 'Harjuta neid veel:' : (S.asked ? 'Ühtegi viga! 🌟' : 'Ühtegi ülesannet ei lahendatud.');
+    S.missed.forEach(f => { const s = document.createElement('span'); s.textContent = f; ms.appendChild(s); });
+    report(full ? 'kõik ülesanded tehtud' : 'lõpetas ise');
+    show('end');
+  }
+
+  /* ---------- tulemuse saatmine vanemale ---------- */
+  function report(kuidas) {
+    if (S.sent || !S.asked || !window.saadaTulemus) return;
+    S.sent = true;
+    const mins = Math.max(1, Math.round((Date.now() - S.startedAt) / 60000));
+    const tekst = [
+      `Õigeid: ${S.correct}/${S.asked} (${Math.round(100 * S.correct / S.asked)}%)`,
+      `Ülesandeid: ${S.asked}/${ROUNDS} · aeg ~${mins} min · ${kuidas}`,
+      S.missed.length ? `Vead: ${S.missed.join('; ')}` : 'Vigu polnud 🌟'
+    ].join('\n');
+    window.saadaTulemus('Kellameister tehtud', tekst);
+  }
+  // Kui laps paneb lehe kinni kesk mängu, saadetakse ikkagi seni tehtu.
+  window.addEventListener('pagehide', () => { if (!$('game').classList.contains('hidden')) report('jäi pooleli'); });
+
+  $('playBtn').onclick = () => { tone(1, .01); startGame(); };
+  $('againBtn').onclick = startGame;
+  $('quitBtn').onclick = () => endGame(false);
+  $('soundBtn').onclick = () => { S.sound = !S.sound; store.set('km-sound', S.sound); updateHud(); };
+})();
+</script>
+</body>
+</html>
