@@ -313,9 +313,15 @@ svg.pizza .dot{pointer-events:none}
       const m = b * 3 <= 12 ? pick([2, 3]) : 2;
       let c = a * m; const d = b * m;
       if (Math.random() < .4) c += pick([-1, 1]);
-      return Math.random() < .5
-        ? makeCompare(a, b, c, d, c === a * m ? `${ft(a, b)} ja ${ft(c, d)} on sama suured – vaata pitsasid!` : 'Vaata, kummast pitsast on pepperoniga suurem osa.')
-        : makeCompare(c, d, a, b, c === a * m ? `${ft(c, d)} ja ${ft(a, b)} on sama suured – vaata pitsasid!` : 'Vaata, kummast pitsast on pepperoniga suurem osa.');
+      // Selgitus laiendab väiksema nimetajaga murru, nt 2/3 = 6/9, ja 6/9 > 5/9.
+      const same = c === a * m, ext = `${fr(a, b)} = ${fr(a * m, d)}`;
+      const left = Math.random() < .5;
+      const why = same
+        ? `${ext} – need on sama suured!`
+        : `${ext}, ja ${left ? `${fr(a * m, d)} ${sign(a * m, d, c, d)} ${fr(c, d)}` : `${fr(c, d)} ${sign(c, d, a * m, d)} ${fr(a * m, d)}`}.`;
+      const q = left ? makeCompare(a, b, c, d, why) : makeCompare(c, d, a, b, why);
+      q.alwaysWhy = true;
+      return q;
     },
     osa: () => makePart(pick([[6, 2], [6, 3], [8, 4], [8, 2], [9, 3]])),
     osa2: () => makePart(pick([[12, 3], [12, 4], [12, 6], [10, 5], [12, 2], [10, 2]])),
@@ -478,7 +484,7 @@ svg.pizza .dot{pointer-events:none}
       const s = $('sign'); s.textContent = q.ans; s.classList.add(ok ? 'ok' : 'no');
     }
     if (q.after) { q.pizzas[0].gone = q.after; renderStage(); }
-    setMsg(ok ? `${pick(PRAISE)} ${q.kind === 'compare' ? '' : q.why}` : q.why, !ok);
+    setMsg(ok ? `${pick(PRAISE)} ${q.kind === 'compare' && !q.alwaysWhy ? '' : q.why}` : q.why, !ok);
     finish(ok);
   }
   function finish(ok) {
