@@ -462,6 +462,8 @@ h1.logo{
     const n = S.parts.length;
     let t;
     if (!okCount && !okEq) t = `Vaja on ${k} võrdset osa. Sul on ${n} osa ja need pole ühesuurused.`;
+    // Sage segadus: laps teeb k ruudu suurused osad, mitte k osa.
+    else if (!okCount && sizes[0] === k) t = `Sul on ${n} osa ja igas on ${k} ruutu. Vaja on aga ${k} osa, mitte ${k} ruutu osas.`;
     else if (!okCount) t = `Osad on ühesuurused, aga neid on ${n}. Vaja on ${k} osa.`;
     else t = `Osi on ${k}, aga need pole ühesuurused.`;
     setMsg(t + ' Koputa osale, et see kustutada.', true);

@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="et">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sulumeister</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0b3a5e; --bg2:#0f6a7a;
+  --ink:#0a1f33;
+  --text:#ffffff;
+  --muted:#bfe6f2;
+  --good:#3ddc84; --bad:#ff5a6e; --gold:#ffd23f; --sel:#ffd23f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:'Fredoka',system-ui,sans-serif;color:var(--text);
+  background:
+    radial-gradient(circle at 15% -5%, #2ec4ff88 0%, transparent 45%),
+    radial-gradient(circle at 110% 90%, #3ddc8455 0%, transparent 40%),
+    linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  overflow-x:hidden;user-select:none;-webkit-user-select:none;
+}
+.wrap{max-width:460px;margin:0 auto;padding:12px 16px 28px;min-height:100vh;display:flex;flex-direction:column}
+.hidden{display:none!important}
+.screen{display:flex;flex-direction:column;gap:14px;flex:1}
+
+.btn{
+  font:inherit;font-weight:700;font-size:22px;color:var(--ink);
+  background:#fff;border:3px solid var(--ink);border-radius:16px;padding:12px;
+  box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.play{background:var(--good);font-size:30px;padding:16px}
+.btn.alt{background:#7fd4ee}
+.icon-btn{
+  width:44px;height:44px;flex:none;display:grid;place-items:center;padding:0;
+  font:inherit;font-size:22px;font-weight:700;color:var(--ink);text-decoration:none;
+  background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:0 4px 0 var(--ink);cursor:pointer;
+}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.link-btn{background:none;border:0;color:var(--muted);font:inherit;font-size:16px;text-decoration:underline;cursor:pointer;align-self:center;padding:6px}
+a.back{color:var(--muted);text-decoration:none;font-size:16px}
+
+/* ---------- algusekraan ---------- */
+.logo-mark{text-align:center;font-size:64px;font-weight:700;line-height:1;margin-top:22px;color:#fff;text-shadow:0 5px 0 var(--ink)}
+.logo-mark span{color:var(--gold)}
+h1.logo{
+  margin:6px 0 0;text-align:center;font-size:46px;line-height:1;color:var(--gold);
+  -webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+  text-shadow:0 5px 0 var(--ink);
+}
+.sub{text-align:center;color:var(--muted);margin:0;font-size:17px}
+.card{background:rgba(255,255,255,.08);border:3px solid rgba(0,0,0,.35);border-radius:20px;padding:14px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.card h2{margin:0 0 10px;font-size:18px;color:var(--muted);font-weight:600}
+.howto{font-size:15px;color:var(--muted);line-height:1.45;margin:0;padding-left:20px}
+.best{text-align:center;color:var(--gold);font-weight:600}
+
+/* ---------- mänguekraan ---------- */
+.hud{display:flex;align-items:center;gap:8px}
+.stat{flex:1;min-width:0;text-align:center;background:rgba(0,0,0,.25);border:2px solid rgba(0,0,0,.3);border-radius:12px;padding:3px 6px}
+.stat .lbl{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.stat .val{font-size:21px;font-weight:700;display:inline-block}
+
+.task{
+  text-align:center;font-size:21px;font-weight:700;color:var(--ink);background:#fff;
+  border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:8px 10px;line-height:1.2;
+}
+.expr{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 4px;
+  min-height:120px;padding:18px 8px;font-size:var(--fs,36px);font-weight:700;line-height:1;
+  background:rgba(0,0,0,.28);border:3px solid var(--ink);border-radius:18px;
+  box-shadow:0 6px 0 var(--ink), inset 0 0 0 2px rgba(255,255,255,.06);
+  touch-action:none;
+}
+.expr.win{animation:bump .45s}
+.expr.shake{animation:shake .3s}
+.num{
+  background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;
+  padding:6px 9px;box-shadow:0 4px 0 var(--ink);min-width:1.5em;text-align:center;
+}
+.expr.pick .num{cursor:pointer}
+.num.sel{background:var(--sel)}
+.num.anchor{background:#7fd4ee}
+.op{padding:0 3px;color:#fff;font-size:1.25em}
+button.op{
+  font:inherit;font-weight:700;color:var(--ink);background:#7fd4ee;border:3px solid var(--ink);border-radius:50%;
+  width:1.5em;height:1.5em;padding:0;display:grid;place-items:center;box-shadow:0 4px 0 var(--ink);cursor:pointer;margin:0 3px;
+}
+button.op.ok{background:var(--good)}
+button.op.no{background:var(--bad);color:#fff;animation:shake .35s}
+.par{color:var(--gold);font-size:1.35em;text-shadow:0 3px 0 var(--ink);animation:popIn .2s ease-out}
+.eq{color:var(--muted);padding-left:4px;white-space:nowrap}
+.eq b{color:var(--gold)}
+
+.panel{min-height:210px;display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row .btn{font-size:19px;padding:12px 6px}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ans{font-size:32px;padding:10px}
+.ans.ok{background:var(--good)}
+.ans.no{background:var(--bad);color:#fff;animation:shake .35s}
+.ans.show{background:var(--good);animation:bump .4s}
+.msg{min-height:28px;text-align:center;font-size:19px;font-weight:700;color:var(--gold);line-height:1.3}
+.msg.badmsg{color:#ffd0d6}
+.steps{
+  text-align:center;font-size:22px;font-weight:700;color:var(--ink);background:#fff;line-height:1.5;
+  border:3px solid var(--ink);border-radius:16px;box-shadow:0 5px 0 var(--ink);padding:6px 10px;
+}
+.steps span{white-space:nowrap}
+.steps .e{color:#1a8fb5}
+
+/* ---------- lõpuekraan ---------- */
+.end-title{text-align:center;font-size:38px;margin:28px 0 0;color:var(--gold);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ink)}
+.big-score{text-align:center;font-size:72px;font-weight:700;line-height:1;margin:6px 0 0}
+.center{text-align:center;margin:0}
+.missed{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.missed span{background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;padding:4px 10px;font-weight:700;font-size:18px;box-shadow:0 3px 0 var(--ink)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes bump{50%{transform:scale(1.05)}}
+@keyframes popIn{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== ALGUS ===== -->
+  <section class="screen" id="start">
+    <a class="back" href="../index.html">← Kõik ülesanded</a>
+    <div class="logo-mark" aria-hidden="true"><span>(</span>2 + 3<span>)</span> · 4</div>
+    <h1 class="logo">Sulumeister</h1>
+    <p class="sub">Sulud ütlevad, mis tehe tehakse esimesena!</p>
+
+    <div class="card">
+      <ul class="howto">
+        <li>Kõigepealt arvutatakse see, mis on sulgudes.</li>
+        <li>Siis korrutamine ja jagamine, vasakult paremale.</li>
+        <li>Kõige lõpuks liitmine ja lahutamine, vasakult paremale.</li>
+        <li>Sulgude panemiseks vea sõrmega üle arvude või koputa esimest ja viimast arvu.</li>
+        <li>Vahel pole sulge üldse vaja. Vaata hoolega!</li>
+        <li>Mängus on 8 ringi. Iga ringiga läheb natuke raskemaks.</li>
+      </ul>
+    </div>
+
+    <p class="best" id="bestStart"></p>
+    <button class="btn play" id="playBtn">Mängi! ▶</button>
+  </section>
+
+  <!-- ===== MÄNG ===== -->
+  <section class="screen hidden" id="game">
+    <header class="hud">
+      <a class="icon-btn" href="../index.html" aria-label="Tagasi ülesannete juurde">←</a>
+      <div class="stat"><span class="lbl">Ring</span><span class="val" id="roundVal">1/8</span></div>
+      <div class="stat"><span class="lbl">Esimese korraga</span><span class="val" id="firstVal">0</span></div>
+      <button class="icon-btn" id="soundBtn" aria-label="Heli">🔊</button>
+    </header>
+
+    <div class="task" id="task"></div>
+    <div class="expr" id="expr"></div>
+
+    <div class="panel">
+      <div class="row hidden" id="parTools">
+        <button class="btn alt" id="noNeedBtn">Sulge pole vaja</button>
+        <button class="btn play" id="checkBtn" style="font-size:19px;padding:12px 6px">Kontrolli ✓</button>
+      </div>
+      <div class="answers hidden" id="answers"></div>
+      <div class="msg" id="msg"></div>
+      <div class="steps hidden" id="steps"></div>
+      <button class="link-btn hidden" id="clearBtn">Eemalda sulud</button>
+      <button class="btn play hidden" id="nextBtn">Järgmine ring ▶</button>
+    </div>
+
+    <button class="link-btn" id="quitBtn">Lõpeta mäng</button>
+  </section>
+
+  <!-- ===== LÕPP ===== -->
+  <section class="screen hidden" id="end">
+    <h1 class="end-title" id="endTitle">Tubli!</h1>
+    <div class="big-score" id="endScore">0/8</div>
+    <p class="center">esimese katsega õigesti</p>
+    <p class="center" id="endRecord"></p>
+    <div class="card">
+      <p class="center" id="endStats"></p>
+    </div>
+    <div class="card">
+      <h2 id="missedTitle">Harjuta neid veel:</h2>
+      <div class="missed" id="missed"></div>
+    </div>
+    <button class="btn play" id="againBtn">Mängi uuesti ↻</button>
+    <a class="back" href="../index.html" style="text-align:center">← Kõik ülesanded</a>
+  </section>
+
+</div>
+
+<script src="../seaded.js"></script>
+<script>
+(() => {
+  const PRAISE = ['Õige!','Super!','Tubli!','Äge!','Vau!','Täpselt!','Nii see on!'];
+  // t: ülesande liik, n: arvude hulk, l: tehete valik, no: tõenäosus, et sulge pole vaja.
+  const PLAN = [
+    { t: 'sulud',   n: 3, l: 'pm' },
+    { t: 'esimene', n: 3, l: 'mix', par: false },
+    { t: 'sulud',   n: 3, l: 'mix', no: .25 },
+    { t: 'arvuta',  n: 3, l: 'mix' },
+    { t: 'sulud',   n: 3, l: 'all', no: .5 },
+    { t: 'esimene', n: 4, l: 'all', par: true },
+    { t: 'sulud',   n: 4, l: 'all', no: .25 },
+    { t: 'arvuta',  n: 4, l: 'all' }
+  ];
+  const ROUNDS = PLAN.length;
+  const MAX_TRIES = 2;
+  const OPS = { pm: ['+', '−'], mix: ['+', '−', '·'], all: ['+', '−', '·', ':'] };
+  const HIGH = o => o === '·' || o === ':';
+
+  const $ = id => document.getElementById(id);
+  const rand = n => Math.floor(Math.random() * n);
+  const between = (a, b) => a + rand(b - a + 1);
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  const S = { sound: store.get('sm-sound', true) };
+
+  /* ---------- heli ---------- */
+  let AC = null;
+  function tone(f, d = .12, type = 'square', v = .05, delay = 0) {
+    if (!S.sound) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02);
+    } catch (e) {}
+  }
+  const SFX = {
+    bad: () => tone(170, .28, 'sawtooth', .04),
+    place: () => tone(260, .07, 'triangle', .09),
+    remove: () => tone(200, .08, 'triangle', .07),
+    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .13, 'square', .05, i * .08))
+  };
+
+  /* ---------- ekraanid ---------- */
+  function show(id) { ['start','game','end'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); }
+  function syncStart() {
+    const best = store.get('sm-best', null);
+    $('bestStart').textContent = best !== null ? `🏆 Parim tulemus: ${best}/${ROUNDS} esimese katsega` : '';
+  }
+  syncStart();
+
+  /* ---------- arvutamine ---------- */
+  // par = [i, j]: sulud ümbritsevad arve i..j (kaasa arvatud). null = sulge pole.
+  function fmt(nums, ops, par) {
+    let s = '';
+    nums.forEach((n, i) => {
+      if (par && i === par[0]) s += '(';
+      s += n < 0 ? '−' + (-n) : n;
+      if (par && i === par[1]) s += ')';
+      if (i < ops.length) s += ' ' + ops[i] + ' ';
+    });
+    return s;
+  }
+  function fmtNum(v) {
+    const s = Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace('.', ',');
+    return s.replace('-', '−');
+  }
+  // Järgmisena tehtava tehte asukoht: sulgudes enne, · ja : enne + ja −, vasakult paremale.
+  function nextOp(nums, ops, par) {
+    const lo = par ? par[0] : 0, hi = par ? par[1] : nums.length - 1;
+    for (let k = lo; k < hi; k++) if (HIGH(ops[k])) return k;
+    return lo;
+  }
+  // Arvutab tehte samm-sammult. valid = kõik vahetulemused on täisarvud vahemikus 1..100.
+  function evalAll(nums, ops, par) {
+    const n = [...nums], o = [...ops];
+    let p = par ? [...par] : null, valid = true, first = null;
+    const steps = [fmt(n, o, p)];
+    while (n.length > 1) {
+      const k = nextOp(n, o, p), a = n[k], b = n[k + 1];
+      if (first === null) first = k;
+      if (o[k] === ':' && b === 0) return { value: NaN, valid: false, steps, first };
+      const v = o[k] === '+' ? a + b : o[k] === '−' ? a - b : o[k] === '·' ? a * b : a / b;
+      const lastOp = o[k];
+      n.splice(k, 2, v); o.splice(k, 1);
+      if (p) {
+        if (k >= p[0] && k < p[1]) { p[1]--; if (p[1] === p[0]) p = null; }
+        else if (k < p[0]) { p[0]--; p[1]--; }
+      }
+      if (!Number.isInteger(v) || v < 1 || v > 100) valid = false;
+      // Korrutamine ja jagamine jäävad korrutustabeli piiresse.
+      if (lastOp === '·' && (a > 10 || b > 10 || a === 1 || b === 1)) valid = false;
+      if (lastOp === ':' && (b > 10 || v > 10 || b === 1 || v === 1)) valid = false;
+      steps.push(valid ? fmt(n, o, p) : '');
+    }
+    return { value: n[0], valid, steps, first };
+  }
+  const same = (a, b) => Math.abs(a - b) < 1e-9;
+  function allPars(n) {
+    const out = [];
+    for (let i = 0; i < n - 1; i++) for (let j = i + 1; j < n; j++) if (!(i === 0 && j === n - 1)) out.push([i, j]);
+    return out;
+  }
+
+  /* ---------- ülesande loomine ---------- */
+  function pickNum(level) {
+    if (level === 'pm') return between(2, 20);
+    if (level === 'all' && Math.random() < .4) return between(10, 40);
+    return between(2, 9);
+  }
+  // mode: 'par' = sulgudega tehe, kus sulud muudavad vastust; 'plain' = sulgudeta tehe.
+  function gen(cfg, mode) {
+    const pars = allPars(cfg.n);
+    for (let t = 0; t < 30000; t++) {
+      const ops = Array.from({ length: cfg.n - 1 }, () => OPS[cfg.l][rand(OPS[cfg.l].length)]);
+      if (cfg.l !== 'pm' && !(ops.some(HIGH) && !ops.every(HIGH))) continue;
+      const nums = Array.from({ length: cfg.n }, () => pickNum(cfg.l));
+      const plain = evalAll(nums, ops, null);
+      if (!plain.valid) continue;
+      let par = null, res = plain;
+      if (mode === 'par') {
+        par = pars[rand(pars.length)];
+        res = evalAll(nums, ops, par);
+        if (!res.valid || same(res.value, plain.value)) continue;
+      } else {
+        // Sulgudeta tehe peab olema selline, kus sulud midagi muudaksid.
+        if (!pars.some(p => !same(evalAll(nums, ops, p).value, plain.value))) continue;
+        if (cfg.t === 'esimene' && plain.first === 0) continue;
+      }
+      const key = fmt(nums, ops, par);
+      if (S.used.has(key)) continue;
+      S.used.add(key);
+      return { nums, ops, par, value: res.value, plain: plain.value, steps: res.steps, first: res.first };
+    }
+    // Varuvariant, kui juhuslik otsing midagi ei leia.
+    const nums = [4, 2, 3], ops = ['+', '·'], par = mode === 'par' ? [0, 1] : null;
+    const res = evalAll(nums, ops, par);
+    return { nums, ops, par, value: res.value, plain: 10, steps: res.steps, first: res.first };
+  }
+  function makeRound(i) {
+    const cfg = PLAN[i];
+    let mode = 'par';
+    if (cfg.t === 'sulud' && Math.random() < (cfg.no || 0)) mode = 'plain';
+    if (cfg.t === 'esimene' && !cfg.par) mode = 'plain';
+    return Object.assign({ type: cfg.t }, gen(cfg, mode));
+  }
+
+  /* ---------- tehte joonistamine ---------- */
+  const exprEl = $('expr');
+  function shownPar() {
+    if (S.drag && S.drag.a !== S.drag.b) return [Math.min(S.drag.a, S.drag.b), Math.max(S.drag.a, S.drag.b)];
+    return S.par;
+  }
+  function renderExpr() {
+    const { nums, ops, type, value } = S.rd;
+    const par = shownPar();
+    exprEl.innerHTML = '';
+    exprEl.style.setProperty('--fs', nums.length > 3 ? '27px' : '36px');
+    exprEl.classList.toggle('pick', type === 'sulud' && S.phase === 'play');
+    const add = (tag, cls, text) => {
+      const e = document.createElement(tag); e.className = cls; e.textContent = text; exprEl.appendChild(e); return e;
+    };
+    nums.forEach((n, i) => {
+      if (par && i === par[0]) add('span', 'par', '(');
+      const inPar = par && i >= par[0] && i <= par[1];
+      const e = add('span', 'num' + (inPar ? ' sel' : '') + (S.anchor === i ? ' anchor' : ''), n);
+      e.dataset.n = i;
+      if (par && i === par[1]) add('span', 'par', ')');
+      if (i < ops.length) {
+        if (type === 'esimene') {
+          const b = add('button', 'op', ops[i]);
+          b.dataset.o = i;
+          b.setAttribute('aria-label', 'Tehe ' + ops[i]);
+          if (S.phase !== 'play') {
+            b.disabled = true;
+            if (i === S.rd.first) b.classList.add('ok');
+            else if (i === S.pickedOp) b.classList.add('no');
+          } else b.onclick = () => pickOp(i);
+        } else add('span', 'op', ops[i]);
+      }
+    });
+    if (type === 'sulud') add('span', 'eq', '= ').appendChild(Object.assign(document.createElement('b'), { textContent: value }));
+    if (type === 'arvuta') add('span', 'eq', S.phase === 'play' ? '= ?' : '= ').appendChild(
+      Object.assign(document.createElement('b'), { textContent: S.phase === 'play' ? '' : value }));
+    $('checkBtn').disabled = !S.par;
+    $('clearBtn').classList.toggle('hidden', !(type === 'sulud' && S.phase === 'play' && (S.par || S.anchor !== null)));
+  }
+  function fx(cls) { exprEl.classList.remove('shake', 'win'); void exprEl.offsetWidth; exprEl.classList.add(cls); }
+  function setMsg(t, bad) { const m = $('msg'); m.textContent = t || ''; m.classList.toggle('badmsg', !!bad); }
+
+  /* ---------- sulgude panemine ---------- */
+  function numAt(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const t = el && el.closest ? el.closest('[data-n]') : null;
+    return t && exprEl.contains(t) ? +t.dataset.n : -1;
+  }
+  exprEl.addEventListener('pointerdown', e => {
+    if (S.phase !== 'play' || S.rd.type !== 'sulud' || S.drag) return;
+    const i = numAt(e); if (i < 0) return;
+    e.preventDefault();
+    S.drag = { a: i, b: i, moved: false };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    if (!S.drag) return;
+    const i = numAt(e);
+    if (i >= 0 && i !== S.drag.b) { S.drag.b = i; S.drag.moved = true; renderExpr(); }
+  }
+  function unlisten() {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+  }
+  function onCancel() { unlisten(); S.drag = null; renderExpr(); }
+  function onUp() {
+    unlisten();
+    const d = S.drag; S.drag = null;
+    if (!d) return;
+    if (d.a !== d.b) setPar(d.a, d.b);
+    else if (!d.moved) tapNum(d.a);
+    renderExpr();
+  }
+  function setPar(a, b) {
+    S.par = [Math.min(a, b), Math.max(a, b)];
+    S.anchor = null;
+    SFX.place();
+    setMsg('');
+  }
+  function tapNum(i) {
+    if (S.anchor === null) {
+      if (S.par && i >= S.par[0] && i <= S.par[1]) { S.par = null; SFX.remove(); return; }
+      S.anchor = i; SFX.place();
+      setMsg('Koputa nüüd arvu, kus sulud lõpevad.');
+    } else if (S.anchor === i) { S.anchor = null; setMsg(''); }
+    else setPar(S.anchor, i);
+  }
+
+  /* ---------- vastamine ---------- */
+  function wrong(text) {
+    S.tries++;
+    SFX.bad(); fx('shake');
+    if (S.tries >= MAX_TRIES) return finish(false, text);
+    setMsg(text + ' Proovi uuesti!', true);
+  }
+  function checkPar() {
+    if (S.phase !== 'play' || !S.par) return;
+    const { nums, ops, value, plain } = S.rd;
+    const r = evalAll(nums, ops, S.par);
+    if (same(r.value, value)) {
+      const extra = same(plain, value) ? ' Aga siin polnud sulge vajagi.' : '';
+      if (extra) S.par = null;
+      return finish(true, PRAISE[rand(PRAISE.length)] + extra);
+    }
+    wrong(Number.isNaN(r.value) ? 'Nulliga ei saa jagada.' : `Sinu tehe annab ${fmtNum(r.value)}, vaja on ${value}.`);
+  }
+  function noNeed() {
+    if (S.phase !== 'play') return;
+    const { value, plain } = S.rd;
+    S.par = null; S.anchor = null;
+    if (same(plain, value)) return finish(true, PRAISE[rand(PRAISE.length)] + ' Sulge polnud vaja.');
+    renderExpr();
+    wrong(`Ilma sulgudeta tuleb ${fmtNum(plain)}, vaja on ${value}.`);
+  }
+  function pickOp(i) {
+    if (S.phase !== 'play') return;
+    S.pickedOp = i;
+    if (i === S.rd.first) return finish(true, PRAISE[rand(PRAISE.length)]);
+    S.tries = MAX_TRIES; SFX.bad(); fx('shake');
+    finish(false, S.rd.par ? 'Kõigepealt tehakse tehe sulgudes.' : 'Korrutamine ja jagamine tehakse enne liitmist ja lahutamist.');
+  }
+  function options(v, plain) {
+    const set = new Set();
+    if (plain !== v && plain > 0) set.add(plain);
+    shuffle([v + 1, v - 1, v + 2, v - 2, v + 10, v - 10]).forEach(x => { if (x > 0 && x !== v && set.size < 3) set.add(x); });
+    return shuffle([v, ...set]);
+  }
+  function pickAnswer(btn, v) {
+    if (S.phase !== 'play') return;
+    if (v === S.rd.value) { btn.classList.add('ok'); return finish(true, PRAISE[rand(PRAISE.length)]); }
+    btn.classList.add('no');
+    document.querySelectorAll('.ans').forEach(b => { if (+b.dataset.v === S.rd.value) b.classList.add('show'); });
+    S.tries = MAX_TRIES; SFX.bad();
+    finish(false, `Õige on ${S.rd.value}.`);
+  }
+
+  // Lõpetab ringi: näitab õiget lahendust ja arvutuskäiku.
+  function finish(ok, text) {
+    const rd = S.rd;
+    S.phase = 'done';
+    S.done++;
+    if (ok) { if (S.tries === 0) S.firstTry++; S.okCount++; SFX.win(); fx('win'); }
+    else {
+      S.missed.push(`${fmt(rd.nums, rd.ops, rd.par)} = ${rd.value}`);
+      text += rd.type === 'sulud' ? (rd.par ? ' Õige on nii:' : ' Siin polnud sulge vaja.') : '';
+    }
+    if (rd.type === 'sulud' && !ok) S.par = rd.par;
+    // Õige vastus võis tulla ka teistsuguste sulgudega kui meie omad.
+    const shown = rd.type === 'sulud' ? evalAll(rd.nums, rd.ops, S.par).steps : rd.steps;
+    S.anchor = null;
+    setMsg(text, !ok);
+    $('steps').innerHTML = shown.map((s, i) => `<span>${i ? '<span class="e">= </span>' : ''}${s}</span>`).join(' ');
+    $('steps').classList.remove('hidden');
+    $('parTools').classList.add('hidden');
+    $('answers').querySelectorAll('button').forEach(b => b.disabled = true);
+    $('nextBtn').textContent = S.round + 1 < ROUNDS ? 'Järgmine ring ▶' : 'Vaata tulemust 🏁';
+    $('nextBtn').classList.remove('hidden');
+    updateHud();
+    renderExpr();
+  }
+
+  /* ---------- ringid ---------- */
+  function updateHud() {
+    $('roundVal').textContent = `${S.round + 1}/${ROUNDS}`;
+    $('firstVal').textContent = S.firstTry;
+    $('soundBtn').textContent = S.sound ? '🔊' : '🔇';
+  }
+  const TASKS = {
+    sulud: 'Pane sulud nii, et vastus oleks õige',
+    esimene: 'Milline tehe tehakse esimesena? Koputa märgile.',
+    arvuta: 'Arvuta!'
+  };
+  function startRound() {
+    S.rd = makeRound(S.round);
+    Object.assign(S, { par: S.rd.type === 'sulud' ? null : S.rd.par, anchor: null, drag: null, tries: 0, pickedOp: null, phase: 'play' });
+    $('task').textContent = TASKS[S.rd.type];
+    $('parTools').classList.toggle('hidden', S.rd.type !== 'sulud');
+    $('steps').classList.add('hidden');
+    $('nextBtn').classList.add('hidden');
+    const ans = $('answers'); ans.innerHTML = '';
+    ans.classList.toggle('hidden', S.rd.type !== 'arvuta');
+    if (S.rd.type === 'arvuta') options(S.rd.value, S.rd.plain).forEach(v => {
+      const b = document.createElement('button');
+      b.className = 'btn ans'; b.textContent = v; b.dataset.v = v;
+      b.onclick = () => pickAnswer(b, v);
+      ans.appendChild(b);
+    });
+    exprEl.classList.remove('win', 'shake');
+    setMsg(S.rd.type === 'sulud' ? 'Vea üle arvude või koputa esimest ja viimast arvu.' : '');
+    updateHud();
+    renderExpr();
+  }
+  function startGame() {
+    Object.assign(S, { round: 0, firstTry: 0, okCount: 0, done: 0, missed: [], used: new Set(), sent: false, startedAt: Date.now() });
+    show('game');
+    startRound();
+  }
+  function nextRound() {
+    S.round++;
+    if (S.round >= ROUNDS) endGame(true);
+    else startRound();
+  }
+  function endGame(full) {
+    if (S.drag) onCancel();
+    S.phase = 'over';
+    const best = store.get('sm-best', null);
+    const rec = full && (best === null || S.firstTry > best);
+    if (rec) store.set('sm-best', S.firstTry);
+    $('endTitle').textContent = full ? (S.firstTry >= 6 ? 'Super!' : 'Tubli!') : 'Mäng läbi!';
+    $('endScore').textContent = `${S.firstTry}/${full ? ROUNDS : S.done}`;
+    $('endRecord').textContent = rec ? '🏆 Uus rekord!' : (best !== null ? `Parim: ${best}/${ROUNDS}` : '');
+    $('endStats').textContent = S.done
+      ? `Ringe tehtud ${S.done}/${ROUNDS} · õigesti lahendatud ${S.okCount}/${S.done}`
+      : 'Ühtegi ringi ei lõpetatud.';
+    const ms = $('missed'); ms.innerHTML = '';
+    $('missedTitle').textContent = S.missed.length ? 'Harjuta neid veel:' : (S.done ? 'Ühtegi viga! 🌟' : '');
+    S.missed.forEach(f => { const s = document.createElement('span'); s.textContent = f; ms.appendChild(s); });
+    report(full ? 'kõik ringid tehtud' : 'lõpetas ise');
+    show('end');
+  }
+
+  /* ---------- tulemuse saatmine vanemale ---------- */
+  function report(kuidas) {
+    if (S.sent || !S.done || !window.saadaTulemus) return;
+    S.sent = true;
+    const mins = Math.max(1, Math.round((Date.now() - S.startedAt) / 60000));
+    const tekst = [
+      `Esimese katsega õigesti: ${S.firstTry}/${S.done}`,
+      `Kokku õigesti: ${S.okCount}/${S.done} (${Math.round(100 * S.okCount / S.done)}%)`,
+      `Ringe: ${S.done}/${ROUNDS} · aeg ~${mins} min · ${kuidas}`,
+      S.missed.length ? `Vead: ${S.missed.join('; ')}` : 'Vigu polnud 🌟'
+    ].join('\n');
+    window.saadaTulemus('Sulumeister tehtud', tekst);
+  }
+  // Kui laps paneb lehe kinni kesk mängu, saadetakse ikkagi seni tehtu.
+  window.addEventListener('pagehide', () => { if (!$('game').classList.contains('hidden')) report('jäi pooleli'); });
+
+  $('playBtn').onclick = () => { tone(1, .01); startGame(); };
+  $('againBtn').onclick = startGame;
+  $('nextBtn').onclick = nextRound;
+  $('checkBtn').onclick = checkPar;
+  $('noNeedBtn').onclick = noNeed;
+  $('clearBtn').onclick = () => {
+    if (S.phase !== 'play') return;
+    S.par = null; S.anchor = null; setMsg(''); SFX.remove(); renderExpr();
+  };
+  $('quitBtn').onclick = () => endGame(false);
+  $('soundBtn').onclick = () => { S.sound = !S.sound; store.set('sm-sound', S.sound); updateHud(); };
+})();
+</script>
+</body>
+</html>
